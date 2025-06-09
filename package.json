@@ -1,0 +1,60 @@
+{
+  "name": "nimiq-mcp-server",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "MCP server for Nimiq blockchain interactions",
+  "author": "",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "nimiq",
+    "blockchain",
+    "rpc"
+  ],
+  "main": "dist/index.js",
+  "bin": {
+    "nimiq-mcp-server": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build",
+    "release": "bumpp && pnpm publish"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "nimiq-rpc-client-ts": "latest"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.14.1",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "bumpp": "^10.1.1",
+    "eslint": "^9.28.0",
+    "eslint-plugin-format": "^1.0.1",
+    "lint-staged": "^16.1.0",
+    "simple-git-hooks": "^2.13.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "simple-git-hooks"
+    ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
