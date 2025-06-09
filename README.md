@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img alt="Nimiq MCP Server logo" loading="lazy" width="96" height="96" decoding="async" data-nimg="1" style="color:transparent" src="https://raw.githubusercontent.com/onmax/nuxt-safe-runtime-config/refs/heads/main/.github/logo.svg" />
+  <img alt="Nimiq MCP Server logo" loading="lazy" width="96" height="96" decoding="async" data-nimg="1" style="color:transparent" src="https://raw.githubusercontent.com/onmax/nimiq-mcp/refs/heads/main/.github/logo.svg" />
   </br>
   Nimiq MCP Server</h1>
 <p align="center">
@@ -206,15 +206,6 @@ The server follows the MCP specification and can be used with any MCP-compatible
 ```bash
 npx nimiq-mcp-server
 ```
-
-## Rate Limits
-
-When using the default public endpoint, be aware of rate limits:
-
-- 20 tokens per 10 seconds per IP
-- Each request consumes tokens based on result size
-- Single results consume 1 token
-- List results consume 1 token per started 100 items
 
 ## Development
 
