@@ -45,7 +45,7 @@ Add this MCP server to your MCP client configuration:
   "mcpServers": {
     "nimiq": {
       "command": "npx",
-      "args": ["nimiq-mcp-server"]
+      "args": ["nimiq-mcp"]
     }
   }
 }
@@ -59,7 +59,7 @@ Add this MCP server to your MCP client configuration:
     "nimiq": {
       "command": "npx",
       "args": [
-        "nimiq-mcp-server",
+        "nimiq-mcp",
         "--rpc-url",
         "https://your-custom-rpc-endpoint.com"
       ]
@@ -76,7 +76,7 @@ Add this MCP server to your MCP client configuration:
     "nimiq": {
       "command": "npx",
       "args": [
-        "nimiq-mcp-server",
+        "nimiq-mcp",
         "--rpc-url",
         "https://your-rpc-endpoint.com",
         "--rpc-username",
@@ -184,7 +184,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "nimiq": {
       "command": "npx",
-      "args": ["nimiq-mcp-server"]
+      "args": ["nimiq-mcp"]
     }
   }
 }
@@ -198,7 +198,7 @@ Add to your `claude_desktop_config.json`:
     "nimiq": {
       "command": "npx",
       "args": [
-        "nimiq-mcp-server",
+        "nimiq-mcp",
         "--rpc-url",
         "https://rpc.nimiqwatch.com"
       ]
@@ -212,7 +212,7 @@ Add to your `claude_desktop_config.json`:
 The server follows the MCP specification and can be used with any MCP-compatible client by running:
 
 ```bash
-npx nimiq-mcp-server
+npx nimiq-mcp
 ```
 
 ## Development

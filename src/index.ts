@@ -56,7 +56,7 @@ function parseArgs(): CliConfig {
         console.error(`
 Nimiq MCP Server
 
-Usage: nimiq-mcp-server [options]
+Usage: nimiq-mcp [options]
 
 Options:
   --rpc-url <url>         Nimiq RPC endpoint URL (default: https://rpc.nimiqwatch.com)
@@ -65,9 +65,9 @@ Options:
   --help, -h              Show this help message
 
 Examples:
-  nimiq-mcp-server
-  nimiq-mcp-server --rpc-url https://rpc.nimiqwatch.com
-  nimiq-mcp-server --rpc-url https://localhost:8648 --rpc-username user --rpc-password pass
+  nimiq-mcp
+  nimiq-mcp --rpc-url https://rpc.nimiqwatch.com
+  nimiq-mcp --rpc-url https://localhost:8648 --rpc-username user --rpc-password pass
 `)
         process.exit(0)
         break
@@ -87,7 +87,7 @@ class NimiqMcpServer {
 
     this.server = new Server(
       {
-        name: 'nimiq-mcp-server',
+        name: 'nimiq-mcp',
         version: '1.0.0',
       },
       {

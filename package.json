@@ -1,5 +1,5 @@
 {
-  "name": "nimiq-mcp-server",
+  "name": "nimiq-mcp",
   "type": "module",
   "version": "0.0.2",
   "description": "MCP server for Nimiq blockchain interactions",
@@ -13,7 +13,7 @@
   ],
   "main": "dist/index.js",
   "bin": {
-    "nimiq-mcp-server": "dist/index.js"
+    "nimiq-mcp": "dist/index.js"
   },
   "engines": {
     "node": ">=18"
