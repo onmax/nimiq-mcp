@@ -107,7 +107,7 @@ The default endpoint at [rpc.nimiqwatch.com](https://rpc.nimiqwatch.com/) provid
 
 ## Available Tools
 
-The MCP server provides 12 comprehensive tools for interacting with the Nimiq blockchain:
+The MCP server provides 16 comprehensive tools for interacting with the Nimiq blockchain:
 
 ### Blockchain Data Tools
 
@@ -136,6 +136,13 @@ The MCP server provides 12 comprehensive tools for interacting with the Nimiq bl
 
 - **`getNetworkInfo`** - Get network status including peer count and consensus state
 
+### Documentation Tools
+
+- **`getRpcMethods`** - Get all available RPC methods from the latest OpenRPC document
+- **`getWebClientDocs`** - Get the complete web-client documentation for LLMs
+- **`getProtocolDocs`** - Get the complete Nimiq protocol and learning documentation for LLMs
+- **`getValidatorDocs`** - Get the complete validator and staking documentation for LLMs
+
 ### Tool Parameters
 
 Each tool accepts specific parameters:
@@ -143,6 +150,7 @@ Each tool accepts specific parameters:
 - **Block tools**: `includeBody` (boolean) to include transaction details
 - **Address tools**: `address` (string) for Nimiq addresses
 - **Transaction tools**: `hash` (string) for transaction hashes, `max` (number) for limits
+- **Documentation tools**: `includeSchemas` (boolean) for `getRpcMethods` to include detailed parameter/result schemas
 
 ### Example Response
 

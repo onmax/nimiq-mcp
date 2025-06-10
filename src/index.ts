@@ -322,6 +322,48 @@ class NimiqMcpServer {
               additionalProperties: false,
             },
           },
+          {
+            name: 'getRpcMethods',
+            description: 'Get all available RPC methods from the latest OpenRPC document',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                includeSchemas: {
+                  type: 'boolean',
+                  description: 'Whether to include parameter and result schemas for each method',
+                  default: false,
+                },
+              },
+              additionalProperties: false,
+            },
+          },
+          {
+            name: 'getWebClientDocs',
+            description: 'Get the complete web-client documentation for LLMs',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false,
+            },
+          },
+          {
+            name: 'getProtocolDocs',
+            description: 'Get the complete Nimiq protocol and learning documentation for LLMs',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false,
+            },
+          },
+          {
+            name: 'getValidatorDocs',
+            description: 'Get the complete validator and staking documentation for LLMs',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false,
+            },
+          },
         ],
       }
     })
@@ -357,6 +399,14 @@ class NimiqMcpServer {
             return await this.handleGetEpochNumber(args)
           case 'getNetworkInfo':
             return await this.handleGetNetworkInfo(args)
+          case 'getRpcMethods':
+            return await this.handleGetRpcMethods(args)
+          case 'getWebClientDocs':
+            return await this.handleGetWebClientDocs(args)
+          case 'getProtocolDocs':
+            return await this.handleGetProtocolDocs(args)
+          case 'getValidatorDocs':
+            return await this.handleGetValidatorDocs(args)
 
           default:
             throw new McpError(
@@ -778,6 +828,225 @@ class NimiqMcpServer {
           text: JSON.stringify(networkInfo, null, 2),
         },
       ],
+    }
+  }
+
+  private async handleGetRpcMethods(args: any): Promise<any> {
+    const { includeSchemas = false } = args
+
+    try {
+      // Get the latest release from GitHub API
+      const latestRelease = await this.getLatestNimiqRelease()
+
+      // Download the OpenRPC document
+      const openRpcDoc = await this.downloadOpenRpcDocument(latestRelease.version)
+
+      // Extract methods from the OpenRPC document
+      const methods = this.extractRpcMethods(openRpcDoc, includeSchemas)
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              version: latestRelease.version,
+              releaseUrl: latestRelease.url,
+              downloadedAt: new Date().toISOString(),
+              methodCount: methods.length,
+              methods,
+            }, null, 2),
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get RPC methods: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  private async getLatestNimiqRelease(): Promise<{ version: string, url: string }> {
+    const response = await fetch('https://api.github.com/repos/nimiq/core-rs-albatross/releases/latest')
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch latest release: ${response.status} ${response.statusText}`)
+    }
+
+    const release = await response.json()
+
+    return {
+      version: release.tag_name,
+      url: release.html_url,
+    }
+  }
+
+  private async downloadOpenRpcDocument(version: string): Promise<any> {
+    const downloadUrl = `https://github.com/nimiq/core-rs-albatross/releases/download/${version}/openrpc-document.json`
+
+    const response = await fetch(downloadUrl)
+
+    if (!response.ok) {
+      throw new Error(`Failed to download OpenRPC document: ${response.status} ${response.statusText}`)
+    }
+
+    return await response.json()
+  }
+
+  private extractRpcMethods(openRpcDoc: any, includeSchemas: boolean): any[] {
+    if (!openRpcDoc.methods || !Array.isArray(openRpcDoc.methods)) {
+      throw new Error('Invalid OpenRPC document: methods not found')
+    }
+
+    return openRpcDoc.methods.map((method: any) => {
+      const extractedMethod: any = {
+        name: method.name,
+        description: method.description || '',
+        tags: method.tags || [],
+      }
+
+      if (includeSchemas) {
+        extractedMethod.params = method.params || []
+        extractedMethod.result = method.result || null
+
+        // Add parameter details for better understanding
+        if (method.params && method.params.length > 0) {
+          extractedMethod.parameterSummary = method.params.map((param: any) => ({
+            name: param.name,
+            type: param.schema?.type || 'unknown',
+            required: param.required || false,
+            description: param.description || param.schema?.description || '',
+          }))
+        }
+
+        // Add result details
+        if (method.result) {
+          extractedMethod.resultSummary = {
+            name: method.result.name,
+            type: method.result.schema?.type || 'unknown',
+            description: method.result.description || method.result.schema?.description || '',
+          }
+        }
+      }
+      else {
+        // Simplified view - just show parameter names and types
+        if (method.params && method.params.length > 0) {
+          extractedMethod.parameters = method.params.map((param: any) => ({
+            name: param.name,
+            type: param.schema?.type || 'unknown',
+            required: param.required || false,
+          }))
+        }
+
+        if (method.result) {
+          extractedMethod.returns = method.result.schema?.type || 'unknown'
+        }
+      }
+
+      return extractedMethod
+    })
+  }
+
+  private async handleGetWebClientDocs(_args: any): Promise<any> {
+    try {
+      const docsUrl = 'https://nimiq.com/developers/build/web-client/llms-full.txt'
+
+      const response = await fetch(docsUrl)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch web-client documentation: ${response.status} ${response.statusText}`)
+      }
+
+      const docsContent = await response.text()
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              source: docsUrl,
+              downloadedAt: new Date().toISOString(),
+              contentLength: docsContent.length,
+              documentation: docsContent,
+            }, null, 2),
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get web-client documentation: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  private async handleGetProtocolDocs(_args: any): Promise<any> {
+    try {
+      const docsUrl = 'https://www.nimiq.com/developers/learn/llms-full.txt'
+
+      const response = await fetch(docsUrl)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch protocol documentation: ${response.status} ${response.statusText}`)
+      }
+
+      const docsContent = await response.text()
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              source: docsUrl,
+              downloadedAt: new Date().toISOString(),
+              contentLength: docsContent.length,
+              documentation: docsContent,
+            }, null, 2),
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get protocol documentation: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  private async handleGetValidatorDocs(_args: any): Promise<any> {
+    try {
+      const docsUrl = 'https://www.nimiq.com/developers/validators/llms-full.txt'
+
+      const response = await fetch(docsUrl)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch validator documentation: ${response.status} ${response.statusText}`)
+      }
+
+      const docsContent = await response.text()
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              source: docsUrl,
+              downloadedAt: new Date().toISOString(),
+              contentLength: docsContent.length,
+              documentation: docsContent,
+            }, null, 2),
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to get validator documentation: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
