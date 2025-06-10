@@ -8,19 +8,19 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 <br/>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/nimiq-mcp-server">
-    <img src="https://img.shields.io/npm/v/nimiq-mcp-server.svg" alt="npm version" />
+  <a href="https://www.npmjs.com/package/nimiq-mcp">
+    <img src="https://img.shields.io/npm/v/nimiq-mcp.svg" alt="npm version" />
   </a>
-  <a href="https://www.npmjs.com/package/nimiq-mcp-server">
-    <img src="https://img.shields.io/npm/dm/nimiq-mcp-server.svg" alt="npm downloads" />
+  <a href="https://www.npmjs.com/package/nimiq-mcp">
+    <img src="https://img.shields.io/npm/dm/nimiq-mcp.svg" alt="npm downloads" />
   </a>
-  <a href="https://github.com/onmax/nimiq-mcp-server/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/onmax/nimiq-mcp-server.svg" alt="License" />
+  <a href="https://github.com/onmax/nimiq-mcp/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/onmax/nimiq-mcp.svg" alt="License" />
   </a>
   <a href="https://modelcontextprotocol.io">
     <img src="https://img.shields.io/badge/MCP-Compatible-blue.svg" alt="MCP Compatible" />
   </a>
-  <a href="https://nimiq.com">
+  <a href="https://nimiq.dev">
     <img src="https://img.shields.io/badge/Nimiq-Blockchain-orange.svg" alt="Nimiq Blockchain" />
   </a>
 
