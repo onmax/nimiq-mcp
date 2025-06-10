@@ -35,6 +35,7 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 
 - Nimiq blockchain tools for accounts, transactions, blocks, and validators
 - Easy setup with npx
+- Only read operations (sending transactions is not supported on purpose).
 
 ## Quick Start
 
