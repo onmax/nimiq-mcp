@@ -108,7 +108,7 @@ The default endpoint at [rpc.nimiqwatch.com](https://rpc.nimiqwatch.com/) provid
 
 ## Available Tools
 
-The MCP server provides 16 comprehensive tools for interacting with the Nimiq blockchain:
+The MCP server provides 17 comprehensive tools for interacting with the Nimiq blockchain:
 
 ### Blockchain Data Tools
 
@@ -143,6 +143,7 @@ The MCP server provides 16 comprehensive tools for interacting with the Nimiq bl
 - **`getWebClientDocs`** - Get the complete web-client documentation for LLMs
 - **`getProtocolDocs`** - Get the complete Nimiq protocol and learning documentation for LLMs
 - **`getValidatorDocs`** - Get the complete validator and staking documentation for LLMs
+- **`searchDocs`** - Search through the Nimiq documentation using full-text search
 
 ### Tool Parameters
 
@@ -152,8 +153,11 @@ Each tool accepts specific parameters:
 - **Address tools**: `address` (string) for Nimiq addresses
 - **Transaction tools**: `hash` (string) for transaction hashes, `max` (number) for limits
 - **Documentation tools**: `includeSchemas` (boolean) for `getRpcMethods` to include detailed parameter/result schemas
+- **Search tools**: `query` (string) for search terms, `limit` (number) to control result count
 
-### Example Response
+### Example Responses
+
+#### Block Data Response
 
 ```json
 {
@@ -171,6 +175,32 @@ Each tool accepts specific parameters:
   },
   "timestamp": "2025-06-09T16:32:49.055Z",
   "network": "mainnet"
+}
+```
+
+#### Search Documentation Response
+
+```json
+{
+  "query": "validator staking",
+  "totalResults": 3,
+  "results": [
+    {
+      "title": "Validator Setup",
+      "content": "To become a validator in Nimiq, you need to stake NIM tokens...",
+      "section": "Validators",
+      "score": 0.95,
+      "snippet": "...validator in Nimiq, you need to stake NIM tokens and run validator software..."
+    },
+    {
+      "title": "Staking Rewards",
+      "content": "Validators earn rewards for producing blocks and validating transactions...",
+      "section": "Economics",
+      "score": 0.87,
+      "snippet": "...earn rewards for producing blocks and validating transactions. Staking rewards..."
+    }
+  ],
+  "searchedAt": "2025-01-20T12:00:00.000Z"
 }
 ```
 
