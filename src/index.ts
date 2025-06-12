@@ -9,6 +9,7 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js'
+import MiniSearch from 'minisearch'
 import { initRpcClient } from 'nimiq-rpc-client-ts/client'
 import {
   getAccountByAddress,
@@ -81,6 +82,8 @@ class NimiqMcpServer {
   private server: Server
   private rpcInitialized = false
   private config: CliConfig
+  private searchIndex: MiniSearch | null = null
+  private cachedDocs: string | null = null
 
   constructor() {
     this.config = parseArgs()
@@ -364,6 +367,26 @@ class NimiqMcpServer {
               additionalProperties: false,
             },
           },
+          {
+            name: 'searchDocs',
+            description: 'Search through the Nimiq documentation using full-text search',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'The search query to find relevant documentation sections',
+                },
+                limit: {
+                  type: 'number',
+                  description: 'Maximum number of search results to return (default: 10)',
+                  default: 10,
+                },
+              },
+              required: ['query'],
+              additionalProperties: false,
+            },
+          },
         ],
       }
     })
@@ -407,6 +430,8 @@ class NimiqMcpServer {
             return await this.handleGetProtocolDocs(args)
           case 'getValidatorDocs':
             return await this.handleGetValidatorDocs(args)
+          case 'searchDocs':
+            return await this.handleSearchDocs(args)
 
           default:
             throw new McpError(
@@ -1048,6 +1073,168 @@ class NimiqMcpServer {
         `Failed to get validator documentation: ${error instanceof Error ? error.message : String(error)}`,
       )
     }
+  }
+
+  private async initializeSearchIndex(): Promise<void> {
+    if (this.searchIndex && this.cachedDocs) {
+      return // Already initialized
+    }
+
+    try {
+      const docsUrl = 'https://nimiq.com/developers/llms-full.txt'
+      const response = await fetch(docsUrl)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch documentation: ${response.status} ${response.statusText}`)
+      }
+
+      const docsContent = await response.text()
+      this.cachedDocs = docsContent
+
+      // Split the documentation into sections for better search results
+      const sections = this.splitIntoSections(docsContent)
+
+      // Initialize MiniSearch
+      this.searchIndex = new MiniSearch({
+        fields: ['title', 'content'], // fields to index for full-text search
+        storeFields: ['title', 'content', 'section'], // fields to return with search results
+        searchOptions: {
+          boost: { title: 2 }, // boost title matches
+          fuzzy: 0.2, // allow some typos
+        },
+      })
+
+      // Add sections to the search index
+      this.searchIndex.addAll(sections)
+    }
+    catch (error) {
+      throw new Error(`Failed to initialize search index: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  private splitIntoSections(content: string): Array<{ id: string, title: string, content: string, section: string }> {
+    // Split content by major sections (lines starting with # or ##)
+    const lines = content.split('\n')
+    const sections: Array<{ id: string, title: string, content: string, section: string }> = []
+    let currentSection = ''
+    let currentTitle = 'Introduction'
+    let currentContent: string[] = []
+    let sectionCounter = 0
+
+    for (const line of lines) {
+      // Check if it's a heading (# or ##)
+      if (line.match(/^#+\s+/)) {
+        // Save previous section if it has content
+        if (currentContent.length > 0) {
+          sections.push({
+            id: `section_${sectionCounter++}`,
+            title: currentTitle,
+            content: currentContent.join('\n').trim(),
+            section: currentSection,
+          })
+          currentContent = []
+        }
+
+        // Start new section
+        currentTitle = line.replace(/^#+\s+/, '').trim()
+        currentSection = currentTitle
+      }
+      else {
+        currentContent.push(line)
+      }
+    }
+
+    // Add the last section
+    if (currentContent.length > 0) {
+      sections.push({
+        id: `section_${sectionCounter}`,
+        title: currentTitle,
+        content: currentContent.join('\n').trim(),
+        section: currentSection,
+      })
+    }
+
+    return sections
+  }
+
+  private async handleSearchDocs(args: any): Promise<any> {
+    try {
+      const { query, limit = 10 } = args
+
+      if (!query || typeof query !== 'string') {
+        throw new Error('Query parameter is required and must be a string')
+      }
+
+      // Initialize search index if not already done
+      await this.initializeSearchIndex()
+
+      if (!this.searchIndex) {
+        throw new Error('Search index not initialized')
+      }
+
+      // Perform the search
+      const searchResults = this.searchIndex.search(query).slice(0, limit)
+
+      // Format results for MCP response
+      const formattedResults = searchResults.map(result => ({
+        title: result.title,
+        content: result.content,
+        section: result.section,
+        score: result.score,
+        // Include a snippet of the content around matches
+        snippet: this.createSnippet(result.content, query),
+      }))
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              query,
+              totalResults: searchResults.length,
+              results: formattedResults,
+              searchedAt: new Date().toISOString(),
+            }, null, 2),
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to search documentation: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  private createSnippet(content: string, query: string, maxLength: number = 200): string {
+    const words = content.toLowerCase().split(/\s+/)
+    const queryWords = query.toLowerCase().split(/\s+/)
+
+    // Find the first occurrence of any query word
+    let startIndex = -1
+    for (let i = 0; i < words.length; i++) {
+      if (queryWords.some(qWord => words[i].includes(qWord))) {
+        startIndex = Math.max(0, i - 10) // Start 10 words before the match
+        break
+      }
+    }
+
+    if (startIndex === -1) {
+      // No direct match found, return beginning of content
+      startIndex = 0
+    }
+
+    // Get a snippet around the match
+    const snippetWords = words.slice(startIndex, startIndex + 40) // About 40 words
+    let snippet = snippetWords.join(' ')
+
+    // Truncate if too long
+    if (snippet.length > maxLength) {
+      snippet = `${snippet.substring(0, maxLength)}...`
+    }
+
+    return snippet
   }
 
   private setupErrorHandling(): void {

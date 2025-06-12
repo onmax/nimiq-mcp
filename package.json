@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "minisearch": "^7.1.2",
     "nimiq-rpc-client-ts": "latest"
   },
   "devDependencies": {
