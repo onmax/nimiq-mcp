@@ -125,7 +125,7 @@ class NimiqMcpServer {
       return {
         tools: [
           {
-            name: 'getHead',
+            name: 'get_nimiq_head',
             description: 'Get the current head block of the Nimiq blockchain',
             inputSchema: {
               type: 'object',
@@ -140,8 +140,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getBlockByNumber',
-            description: 'Get a block by its number',
+            name: 'get_nimiq_block_by_number',
+            description: 'Get a Nimiq block by its number',
             inputSchema: {
               type: 'object',
               properties: {
@@ -160,8 +160,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getBlockByHash',
-            description: 'Get a block by its hash',
+            name: 'get_nimiq_block_by_hash',
+            description: 'Get a Nimiq block by its hash',
             inputSchema: {
               type: 'object',
               properties: {
@@ -180,8 +180,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getAccount',
-            description: 'Get account information by address',
+            name: 'get_nimiq_account',
+            description: 'Get Nimiq account information by address',
             inputSchema: {
               type: 'object',
               properties: {
@@ -200,8 +200,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getBalance',
-            description: 'Get the balance of an account',
+            name: 'get_nimiq_balance',
+            description: 'Get the balance of a Nimiq account',
             inputSchema: {
               type: 'object',
               properties: {
@@ -220,8 +220,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getTransaction',
-            description: 'Get transaction details by hash',
+            name: 'get_nimiq_transaction',
+            description: 'Get Nimiq transaction details by hash',
             inputSchema: {
               type: 'object',
               properties: {
@@ -235,8 +235,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getTransactionsByAddress',
-            description: 'Get transactions for a specific address',
+            name: 'get_nimiq_transactions_by_address',
+            description: 'Get Nimiq transactions for a specific address',
             inputSchema: {
               type: 'object',
               properties: {
@@ -264,8 +264,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getValidators',
-            description: 'Get information about all validators',
+            name: 'get_nimiq_validators',
+            description: 'Get information about all Nimiq validators',
             inputSchema: {
               type: 'object',
               properties: {
@@ -279,8 +279,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getValidator',
-            description: 'Get validator information by address',
+            name: 'get_nimiq_validator',
+            description: 'Get Nimiq validator information by address',
             inputSchema: {
               type: 'object',
               properties: {
@@ -294,8 +294,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getSlots',
-            description: 'Get validator slots information',
+            name: 'get_nimiq_slots',
+            description: 'Get Nimiq validator slots information',
             inputSchema: {
               type: 'object',
               properties: {
@@ -308,8 +308,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getEpochNumber',
-            description: 'Get the current epoch number',
+            name: 'get_nimiq_epoch_number',
+            description: 'Get the current Nimiq epoch number',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -317,8 +317,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getNetworkInfo',
-            description: 'Get network information including peer count and sync status',
+            name: 'get_nimiq_network_info',
+            description: 'Get Nimiq network information including peer count and sync status',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -326,8 +326,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getRpcMethods',
-            description: 'Get all available RPC methods from the latest OpenRPC document',
+            name: 'get_nimiq_rpc_methods',
+            description: 'Get all available Nimiq RPC methods from the latest OpenRPC document',
             inputSchema: {
               type: 'object',
               properties: {
@@ -341,8 +341,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getWebClientDocs',
-            description: 'Get the complete web-client documentation for LLMs',
+            name: 'get_nimiq_web_client_docs',
+            description: 'Get the complete Nimiq web-client documentation for LLMs',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -350,7 +350,7 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getProtocolDocs',
+            name: 'get_nimiq_protocol_docs',
             description: 'Get the complete Nimiq protocol and learning documentation for LLMs',
             inputSchema: {
               type: 'object',
@@ -359,8 +359,8 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'getValidatorDocs',
-            description: 'Get the complete validator and staking documentation for LLMs',
+            name: 'get_nimiq_validator_docs',
+            description: 'Get the complete Nimiq validator and staking documentation for LLMs',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -368,14 +368,14 @@ class NimiqMcpServer {
             },
           },
           {
-            name: 'searchDocs',
-            description: 'Search through the Nimiq documentation using full-text search',
+            name: 'search_nimiq_docs',
+            description: 'Search through the Nimiq documentation using full-text search. For best results, use specific keywords rather than full sentences (e.g., "validator staking" instead of "how do I stake with a validator")',
             inputSchema: {
               type: 'object',
               properties: {
                 query: {
                   type: 'string',
-                  description: 'The search query to find relevant documentation sections',
+                  description: 'The search query to find relevant documentation sections. Use 2-4 specific keywords for best results (e.g., "transaction fee", "validator rewards", "web client setup")',
                 },
                 limit: {
                   type: 'number',
@@ -398,39 +398,39 @@ class NimiqMcpServer {
         this.initializeRpc()
 
         switch (name) {
-          case 'getHead':
+          case 'get_nimiq_head':
             return await this.handleGetHead(args)
-          case 'getBlockByNumber':
+          case 'get_nimiq_block_by_number':
             return await this.handleGetBlockByNumber(args)
-          case 'getBlockByHash':
+          case 'get_nimiq_block_by_hash':
             return await this.handleGetBlockByHash(args)
-          case 'getAccount':
+          case 'get_nimiq_account':
             return await this.handleGetAccount(args)
-          case 'getBalance':
+          case 'get_nimiq_balance':
             return await this.handleGetBalance(args)
-          case 'getTransaction':
+          case 'get_nimiq_transaction':
             return await this.handleGetTransaction(args)
-          case 'getTransactionsByAddress':
+          case 'get_nimiq_transactions_by_address':
             return await this.handleGetTransactionsByAddress(args)
-          case 'getValidators':
+          case 'get_nimiq_validators':
             return await this.handleGetValidators(args)
-          case 'getValidator':
+          case 'get_nimiq_validator':
             return await this.handleGetValidator(args)
-          case 'getSlots':
+          case 'get_nimiq_slots':
             return await this.handleGetSlots(args)
-          case 'getEpochNumber':
+          case 'get_nimiq_epoch_number':
             return await this.handleGetEpochNumber(args)
-          case 'getNetworkInfo':
+          case 'get_nimiq_network_info':
             return await this.handleGetNetworkInfo(args)
-          case 'getRpcMethods':
+          case 'get_nimiq_rpc_methods':
             return await this.handleGetRpcMethods(args)
-          case 'getWebClientDocs':
+          case 'get_nimiq_web_client_docs':
             return await this.handleGetWebClientDocs(args)
-          case 'getProtocolDocs':
+          case 'get_nimiq_protocol_docs':
             return await this.handleGetProtocolDocs(args)
-          case 'getValidatorDocs':
+          case 'get_nimiq_validator_docs':
             return await this.handleGetValidatorDocs(args)
-          case 'searchDocs':
+          case 'search_nimiq_docs':
             return await this.handleSearchDocs(args)
 
           default:
