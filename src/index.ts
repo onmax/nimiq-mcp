@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import type { Provider } from '@nimiq/utils/fiat-api'
 import process from 'node:process'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -9,6 +10,9 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js'
+import { CryptoCurrency, FiatCurrency, getExchangeRates } from '@nimiq/utils/fiat-api'
+import { calculateStakingRewards } from '@nimiq/utils/rewards-calculator'
+import { posSupplyAt } from '@nimiq/utils/supply-calculator'
 import MiniSearch from 'minisearch'
 import { initRpcClient } from 'nimiq-rpc-client-ts/client'
 import {
@@ -124,6 +128,101 @@ class NimiqMcpServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
+          {
+            name: 'get_nimiq_supply',
+            description: 'Get the current circulating supply of NIM',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false,
+            },
+          },
+          {
+            name: 'calculate_nimiq_supply_at',
+            description: 'Calculate the Nimiq PoS supply at a given time',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                timestampMs: {
+                  type: 'number',
+                  description: 'The timestamp in milliseconds at which to calculate the PoS supply',
+                },
+                network: {
+                  type: 'string',
+                  enum: ['main-albatross', 'test-albatross'],
+                  description: 'The network name',
+                  default: 'main-albatross',
+                },
+              },
+              required: ['timestampMs'],
+              additionalProperties: false,
+            },
+          },
+          {
+            name: 'calculate_nimiq_staking_rewards',
+            description: 'Calculates the potential wealth accumulation based on staking',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                stakedSupplyRatio: {
+                  type: 'number',
+                  description: 'The ratio of the total staked cryptocurrency to the total supply',
+                },
+                amount: {
+                  type: 'number',
+                  description: 'The initial amount of cryptocurrency staked, in NIM',
+                  default: 1,
+                },
+                days: {
+                  type: 'number',
+                  description: 'The number of days the cryptocurrency is staked',
+                  default: 365,
+                },
+                autoRestake: {
+                  type: 'boolean',
+                  description: 'Indicates whether the staking rewards are restaked',
+                  default: true,
+                },
+                network: {
+                  type: 'string',
+                  enum: ['main-albatross', 'test-albatross'],
+                  description: 'The network name',
+                  default: 'main-albatross',
+                },
+                fee: {
+                  type: 'number',
+                  description: 'The fee percentage that the pool charges for staking',
+                  default: 0,
+                },
+              },
+              required: ['stakedSupplyRatio'],
+              additionalProperties: false,
+            },
+          },
+          {
+            name: 'get_nimiq_price',
+            description: 'Get the price of NIM against other currencies',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                currencies: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                  },
+                  description: 'An array of currency tickers to get the price against (e.g., ["USD", "EUR", "BTC"])',
+                },
+                provider: {
+                  type: 'string',
+                  enum: ['CryptoCompare', 'CoinGecko'],
+                  description: 'The provider to use for fetching prices',
+                  default: 'CryptoCompare',
+                },
+              },
+              required: ['currencies'],
+              additionalProperties: false,
+            },
+          },
           {
             name: 'get_nimiq_head',
             description: 'Get the current head block of the Nimiq blockchain',
@@ -394,9 +493,19 @@ class NimiqMcpServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params
 
-      try {
-        this.initializeRpc()
+      // The get_nimiq_supply tool doesn't need RPC, so we handle it before the initialization.
+      if (name === 'get_nimiq_supply')
+        return await this.handleGetSupply(args)
+      if (name === 'calculate_nimiq_supply_at')
+        return this.handleCalculateSupplyAt(args)
+      if (name === 'calculate_nimiq_staking_rewards')
+        return this.handleCalculateStakingRewards(args)
+      if (name === 'get_nimiq_price')
+        return this.handleGetNimPrice(args)
 
+      this.initializeRpc()
+
+      try {
         switch (name) {
           case 'get_nimiq_head':
             return await this.handleGetHead(args)
@@ -451,6 +560,100 @@ class NimiqMcpServer {
         )
       }
     })
+  }
+
+  private async handleGetSupply(_args: any): Promise<any> {
+    try {
+      const response = await fetch('https://nim.sh/stats/supply.json')
+      if (!response.ok) {
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          `Failed to fetch supply data: ${response.statusText}`,
+        )
+      }
+      const data = await response.json()
+      return {
+        ...data,
+        updatedAt: new Date().toISOString(),
+      }
+    }
+    catch (error: any) {
+      throw new McpError(
+        ErrorCode.InvalidRequest,
+        `Error fetching supply data: ${error.message}`,
+      )
+    }
+  }
+
+  private handleCalculateSupplyAt(args: any): any {
+    const { timestampMs, network } = args
+    const supply = posSupplyAt(timestampMs, { network })
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            timestampMs,
+            network,
+            supply,
+          }, null, 2),
+        },
+      ],
+    }
+  }
+
+  private handleCalculateStakingRewards(args: any): any {
+    const rewards = calculateStakingRewards(args)
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(rewards, null, 2),
+        },
+      ],
+    }
+  }
+
+  private async handleGetNimPrice(args: any): Promise<any> {
+    const { currencies, provider } = args
+    const typedProvider = provider as Provider
+    const vsCurrencies = currencies.map((c: string) => c.toUpperCase())
+
+    // Separate crypto and fiat currencies
+    const cryptoCurrencies = vsCurrencies.filter((c: string) => c in CryptoCurrency) as CryptoCurrency[]
+    const fiatCurrencies = vsCurrencies.filter((c: string) => c in FiatCurrency) as FiatCurrency[]
+
+    try {
+      const cryptoRates: { nim?: Record<string, number | undefined> } = cryptoCurrencies.length > 0
+        ? await getExchangeRates([CryptoCurrency.NIM], cryptoCurrencies, typedProvider)
+        : {}
+
+      const fiatRates: { nim?: Record<string, number | undefined> } = fiatCurrencies.length > 0
+        // The type from the library is not correct, we cast to any to make it work
+        ? await getExchangeRates([CryptoCurrency.NIM], fiatCurrencies as any, typedProvider)
+        : {}
+
+      const rates = { ...(cryptoRates.nim || {}), ...(fiatRates.nim || {}) }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              nimPrice: rates,
+              provider,
+              updatedAt: new Date().toISOString(),
+            }, null, 2),
+          },
+        ],
+      }
+    }
+    catch (error: any) {
+      throw new McpError(
+        ErrorCode.InvalidRequest,
+        `Error fetching NIM price: ${error.message}`,
+      )
+    }
   }
 
   private async handleGetHead(args: any): Promise<any> {

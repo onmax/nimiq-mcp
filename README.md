@@ -108,7 +108,7 @@ The default endpoint at [rpc.nimiqwatch.com](https://rpc.nimiqwatch.com/) provid
 
 ## Available Tools
 
-The MCP server provides 17 comprehensive tools for interacting with the Nimiq blockchain:
+The MCP server provides 20 comprehensive tools for interacting with the Nimiq blockchain:
 
 ### Blockchain Data Tools
 
@@ -116,6 +116,13 @@ The MCP server provides 17 comprehensive tools for interacting with the Nimiq bl
 - **`getBlockByNumber`** - Retrieve a specific block by its number
 - **`getBlockByHash`** - Retrieve a specific block by its hash
 - **`getEpochNumber`** - Get the current epoch number
+
+### Blockchain Calculation Tools
+
+- **`getSupply`** - Get the current circulating supply of NIM
+- **`calculateSupplyAt`** - Calculate the Nimiq PoS supply at a given time
+- **`calculateStakingRewards`** - Calculates the potential wealth accumulation based on staking
+- **`getPrice`** - Get the price of NIM against other currencies
 
 ### Account & Balance Tools
 
@@ -156,6 +163,23 @@ Each tool accepts specific parameters:
 - **Search tools**: `query` (string) for search terms, `limit` (number) to control result count
 
 ### Example Responses
+
+#### Supply Data Response
+
+```json
+{
+  "total": 210000000000000,
+  "vested": 0,
+  "burned": 0,
+  "max": 210000000000000,
+  "initial": 25200000000000,
+  "staking": 100000000000,
+  "minted": 1000000000,
+  "circulating": 25200000000000,
+  "mined": 0,
+  "updatedAt": "2025-01-20T12:00:00.000Z"
+}
+```
 
 #### Block Data Response
 
