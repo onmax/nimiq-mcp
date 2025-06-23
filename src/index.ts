@@ -131,7 +131,7 @@ class NimiqMcpServer {
         tools: [
           {
             name: 'get_nimiq_supply',
-            description: 'Get the current circulating supply of NIM',
+            description: 'Get the current supply of NIM. Returns an object with the following supply fields: total, vested, burned, max, initial, staking, minted, circulating, and mined. All values are in Luna (1 NIM = 100,000 Luna).',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -161,13 +161,13 @@ class NimiqMcpServer {
           },
           {
             name: 'calculate_nimiq_staking_rewards',
-            description: 'Calculates the potential wealth accumulation based on staking',
+            description: 'Calculates the potential wealth accumulation based on staking. If `stakedSupplyRatio` is not provided, the current staked ratio will be used instead.',
             inputSchema: {
               type: 'object',
               properties: {
                 stakedSupplyRatio: {
                   type: 'number',
-                  description: 'The ratio of the total staked cryptocurrency to the total supply',
+                  description: 'The ratio of the total staked cryptocurrency to the total supply. If not provided, the current staked ratio will be used instead.',
                 },
                 amount: {
                   type: 'number',
@@ -196,7 +196,6 @@ class NimiqMcpServer {
                   default: 0,
                 },
               },
-              required: ['stakedSupplyRatio'],
               additionalProperties: false,
             },
           },
@@ -505,7 +504,7 @@ class NimiqMcpServer {
       if (name === 'calculate_nimiq_supply_at')
         return this.handleCalculateSupplyAt(args)
       if (name === 'calculate_nimiq_staking_rewards')
-        return this.handleCalculateStakingRewards(args)
+        return await this.handleCalculateStakingRewards(args)
       if (name === 'get_nimiq_price')
         return this.handleGetNimPrice(args)
 
@@ -568,16 +567,17 @@ class NimiqMcpServer {
     })
   }
 
+  private async getSupplyData(): Promise<any> {
+    const response = await fetch('https://nim.sh/stats/supply.json')
+    if (!response.ok)
+      throw new Error(`Failed to fetch supply data: ${response.statusText}`)
+
+    return response.json()
+  }
+
   private async handleGetSupply(_args: any): Promise<any> {
     try {
-      const response = await fetch('https://nim.sh/stats/supply.json')
-      if (!response.ok) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          `Failed to fetch supply data: ${response.statusText}`,
-        )
-      }
-      const data = await response.json()
+      const data = await this.getSupplyData()
       return {
         ...data,
         updatedAt: new Date().toISOString(),
@@ -608,8 +608,29 @@ class NimiqMcpServer {
     }
   }
 
-  private handleCalculateStakingRewards(args: any): any {
-    const rewards = calculateStakingRewards(args)
+  private async handleCalculateStakingRewards(args: any): Promise<any> {
+    const newArgs = { ...args }
+
+    if (newArgs.stakedSupplyRatio === undefined || newArgs.stakedSupplyRatio === null) {
+      try {
+        const supplyData = await this.getSupplyData()
+        if (supplyData.circulating > 0) {
+          newArgs.stakedSupplyRatio = supplyData.staking / supplyData.circulating
+        }
+        else {
+          // Fallback or error if total supply is 0
+          throw new Error('Circulating supply is zero, cannot calculate staking ratio.')
+        }
+      }
+      catch (error: any) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Failed to fetch supply data to calculate staking ratio: ${error.message}`,
+        )
+      }
+    }
+
+    const rewards = calculateStakingRewards(newArgs)
     return {
       content: [
         {
