@@ -17,6 +17,7 @@ import MiniSearch from 'minisearch'
 import { initRpcClient } from 'nimiq-rpc-client-ts/client'
 import {
   getAccountByAddress,
+  getActiveValidators,
   getBlockByHash,
   getBlockByNumber,
   getBlockNumber,
@@ -364,7 +365,7 @@ class NimiqMcpServer {
           },
           {
             name: 'get_nimiq_validators',
-            description: 'Get information about all Nimiq validators',
+            description: 'Get information about Nimiq validators. By default, it returns only active validators.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -372,6 +373,11 @@ class NimiqMcpServer {
                   type: 'boolean',
                   description: 'Whether to include staker information for each validator',
                   default: false,
+                },
+                onlyActive: {
+                  type: 'boolean',
+                  description: 'If true, returns only active validators. If false, returns all validators.',
+                  default: true,
                 },
               },
               additionalProperties: false,
@@ -884,30 +890,62 @@ class NimiqMcpServer {
   }
 
   private async handleGetValidators(args: any): Promise<any> {
-    const { includeStakers = false } = args
+    const { includeStakers = false, onlyActive = true } = args
 
     const params: any = {}
     if (includeStakers !== undefined)
       params.includeStakers = includeStakers
 
-    const [success, error, validators] = await getValidators(params)
+    const [success, error, rpcValidators] = onlyActive
+      ? await getActiveValidators(params)
+      : await getValidators(params)
 
-    if (!success || !validators) {
+    if (!success || !rpcValidators) {
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to get validators: ${error || 'Unknown error'}`,
       )
     }
 
+    const network = this.config.rpcUrl.includes('testnet') ? 'testnet' : 'mainnet'
+    const apiUrl = `https://validators-api-${network}.pages.dev/api/v1/validators`
+    let mergedValidators = rpcValidators
+    let apiError: string | null = null
+
+    try {
+      const apiResponse = await fetch(apiUrl)
+      if (apiResponse.ok) {
+        const apiValidators = await apiResponse.json()
+        if (Array.isArray(apiValidators)) {
+          const apiValidatorsMap = new Map(apiValidators.map(v => [v.address, v]))
+          mergedValidators = rpcValidators.map((rpcValidator: any) => {
+            const apiData = apiValidatorsMap.get(rpcValidator.address)
+            return apiData ? { ...rpcValidator, ...apiData } : rpcValidator
+          })
+        }
+      }
+      else {
+        apiError = `Failed to fetch from validators API: ${apiResponse.statusText}`
+      }
+    }
+    catch (e: any) {
+      apiError = `Error fetching from validators API: ${e.message}`
+    }
+
+    const response: any = {
+      validatorCount: Array.isArray(mergedValidators) ? mergedValidators.length : 0,
+      validators: mergedValidators,
+      network,
+    }
+
+    if (apiError)
+      response.apiWarning = apiError
+
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify({
-            validatorCount: Array.isArray(validators) ? validators.length : 0,
-            validators,
-            network: this.config.rpcUrl.includes('testnet') ? 'testnet' : 'mainnet',
-          }, null, 2),
+          text: JSON.stringify(response, null, 2),
         },
       ],
     }

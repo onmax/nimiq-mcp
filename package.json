@@ -25,27 +25,28 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
+    "inspect": "npx @modelcontextprotocol/inspector tsx src/index.ts",
     "prepublishOnly": "pnpm build",
     "release": "bumpp && pnpm publish"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.13.0",
     "@nimiq/utils": "^0.12.4",
     "minisearch": "^7.1.2",
-    "nimiq-rpc-client-ts": "latest"
+    "nimiq-rpc-client-ts": "^1.0.0-beta.28"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.14.1",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "bumpp": "^10.1.1",
-    "eslint": "^9.28.0",
+    "@antfu/eslint-config": "^4.16.1",
+    "@types/node": "^20.19.1",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
+    "@typescript-eslint/parser": "^8.34.1",
+    "bumpp": "^10.2.0",
+    "eslint": "^9.29.0",
     "eslint-plugin-format": "^1.0.1",
-    "lint-staged": "^16.1.0",
+    "lint-staged": "^16.1.2",
     "simple-git-hooks": "^2.13.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.4.0"
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
