@@ -1,7 +1,7 @@
 {
   "name": "nimiq-mcp",
   "type": "module",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "MCP server for Nimiq blockchain interactions",
   "author": "",
   "license": "MIT",
