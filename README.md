@@ -106,9 +106,13 @@ If no `--rpc-url` is provided, the server will use:
 
 The default endpoint at [rpc.nimiqwatch.com](https://rpc.nimiqwatch.com/) provides free rate-limited access to a Nimiq node.
 
-## Available Tools
+## Available Tools and Resources
 
-The MCP server provides 20 comprehensive tools for interacting with the Nimiq blockchain:
+The MCP server provides comprehensive tools and resources for interacting with the Nimiq blockchain:
+
+### Tools (17 available)
+
+Tools are for dynamic operations and computations:
 
 ### Blockchain Data Tools
 
@@ -147,10 +151,17 @@ The MCP server provides 20 comprehensive tools for interacting with the Nimiq bl
 ### Documentation Tools
 
 - **`getRpcMethods`** - Get all available RPC methods from the latest OpenRPC document
-- **`getWebClientDocs`** - Get the complete web-client documentation for LLMs
-- **`getProtocolDocs`** - Get the complete Nimiq protocol and learning documentation for LLMs
-- **`getValidatorDocs`** - Get the complete validator and staking documentation for LLMs
 - **`searchDocs`** - Search through the Nimiq documentation using full-text search
+
+### Resources (3 available)
+
+Resources provide static content that can be cached by MCP clients:
+
+### Documentation Resources
+
+- **`nimiq://docs/web-client`** - Complete web-client documentation for LLMs
+- **`nimiq://docs/protocol`** - Complete Nimiq protocol and learning documentation for LLMs
+- **`nimiq://docs/validators`** - Complete validator and staking documentation for LLMs
 
 ### Tool Parameters
 
@@ -161,6 +172,14 @@ Each tool accepts specific parameters:
 - **Transaction tools**: `hash` (string) for transaction hashes, `max` (number) for limits
 - **Documentation tools**: `includeSchemas` (boolean) for `getRpcMethods` to include detailed parameter/result schemas
 - **Search tools**: `query` (string) for search terms, `limit` (number) to control result count
+
+### Resource Access
+
+Resources are accessed via their URI and don't require parameters:
+
+- **Documentation resources**: Access via `nimiq://docs/web-client`, `nimiq://docs/protocol`, or `nimiq://docs/validators`
+- Content is returned as plain text for optimal LLM consumption
+- MCP clients can cache resource content for improved performance
 
 ### Example Responses
 
@@ -296,7 +315,28 @@ The MCP server is built using:
 - **[@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk)**: Official MCP SDK for TypeScript
 - **[nimiq-rpc-client-ts](https://github.com/onmax/albatross-rpc-client-ts/)**: Fully typed Nimiq RPC client
 - **[rpc.nimiqwatch.com](https://rpc.nimiqwatch.com/)**: Free public Nimiq RPC service
+- **[Valibot](https://valibot.dev/)**: Runtime schema validation and type safety for all tool inputs
 - **TypeScript**: For type safety and better development experience
+
+### Input Validation
+
+The server uses **Valibot** for comprehensive input validation on all tools, providing:
+
+- **Runtime Type Safety**: All tool inputs are validated against strict schemas
+- **Descriptive Error Messages**: Clear validation errors with field-level details
+- **Type Inference**: Automatic TypeScript type inference from Valibot schemas
+- **Default Values**: Automatic application of default values for optional parameters
+- **Enum Validation**: Strict validation of allowed values for parameters like network types
+
+Example validation:
+
+```typescript
+const StakingRewardsSchema = v.object({
+  amount: v.optional(v.pipe(v.number(), v.description('Initial amount staked in NIM')), 1),
+  days: v.optional(v.pipe(v.number(), v.description('Number of days staked')), 365),
+  network: v.optional(v.pipe(v.picklist(['main-albatross', 'test-albatross']), v.description('Network name')), 'main-albatross'),
+})
+```
 
 ## Error Handling
 

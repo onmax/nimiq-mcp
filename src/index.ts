@@ -7,8 +7,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ErrorCode,
+  ListResourcesRequestSchema,
   ListToolsRequestSchema,
   McpError,
+  ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
 import { CryptoCurrency, FiatCurrency, getExchangeRates } from '@nimiq/utils/fiat-api'
 import { calculateStakingRewards } from '@nimiq/utils/rewards-calculator'
@@ -30,11 +32,105 @@ import {
   getValidators,
   isConsensusEstablished,
 } from 'nimiq-rpc-client-ts/http'
+import * as v from 'valibot'
 
 interface CliConfig {
   rpcUrl: string
   rpcUsername?: string
   rpcPassword?: string
+}
+
+// Valibot schemas for input validation
+const SupplyAtSchema = v.object({
+  timestampMs: v.pipe(v.number(), v.description('The timestamp in milliseconds at which to calculate the PoS supply')),
+  network: v.optional(v.pipe(v.picklist(['main-albatross', 'test-albatross']), v.description('The network name')), 'main-albatross'),
+})
+
+const StakingRewardsSchema = v.object({
+  stakedSupplyRatio: v.optional(v.pipe(v.number(), v.description('The ratio of the total staked cryptocurrency to the total supply. If not provided, the current staked ratio will be used instead.'))),
+  amount: v.optional(v.pipe(v.number(), v.description('The initial amount of cryptocurrency staked, in NIM')), 1),
+  days: v.optional(v.pipe(v.number(), v.description('The number of days the cryptocurrency is staked')), 365),
+  autoRestake: v.optional(v.pipe(v.boolean(), v.description('Indicates whether the staking rewards are restaked')), true),
+  network: v.optional(v.pipe(v.picklist(['main-albatross', 'test-albatross']), v.description('The network name')), 'main-albatross'),
+  fee: v.optional(v.pipe(v.number(), v.description('The fee percentage that the pool charges for staking')), 0),
+})
+
+const PriceSchema = v.object({
+  currencies: v.pipe(v.array(v.string()), v.description('An array of currency tickers to get the price against (e.g., ["USD", "EUR", "BTC"])')),
+  provider: v.optional(v.pipe(v.picklist(['CryptoCompare', 'CoinGecko']), v.description('The provider to use for fetching prices')), 'CryptoCompare'),
+})
+
+const BlockByNumberSchema = v.object({
+  blockNumber: v.pipe(v.number(), v.description('The block number to retrieve')),
+  includeBody: v.optional(v.pipe(v.boolean(), v.description('Whether to include the block body with transactions')), false),
+})
+
+const BlockByHashSchema = v.object({
+  hash: v.pipe(v.string(), v.description('The block hash to retrieve')),
+  includeBody: v.optional(v.pipe(v.boolean(), v.description('Whether to include the block body with transactions')), false),
+})
+
+const AccountSchema = v.object({
+  address: v.pipe(v.string(), v.description('The Nimiq address to get account information for')),
+  withMetadata: v.optional(v.pipe(v.boolean(), v.description('Whether to include additional metadata')), false),
+})
+
+const TransactionSchema = v.object({
+  hash: v.pipe(v.string(), v.description('The transaction hash to retrieve')),
+})
+
+const TransactionsByAddressSchema = v.object({
+  address: v.pipe(v.string(), v.description('The Nimiq address to get transactions for')),
+  max: v.optional(v.pipe(v.number(), v.description('Maximum number of transactions to return')), 100),
+  startAt: v.optional(v.pipe(v.string(), v.description('Transaction hash to start at, used for paging'))),
+  onlyConfirmed: v.optional(v.pipe(v.boolean(), v.description('Whether to only return confirmed transactions')), true),
+})
+
+const ValidatorsSchema = v.object({
+  includeStakers: v.optional(v.pipe(v.boolean(), v.description('Whether to include staker information for each validator')), false),
+  onlyActive: v.optional(v.pipe(v.boolean(), v.description('If true, returns only active validators. If false, returns all validators.')), true),
+})
+
+const ValidatorSchema = v.object({
+  address: v.pipe(v.string(), v.description('The validator address to get information for')),
+})
+
+const SlotsSchema = v.object({
+  blockNumber: v.optional(v.pipe(v.number(), v.description('Block number to get slots for (optional, defaults to current)'))),
+})
+
+const HeadSchema = v.object({
+  includeBody: v.optional(v.pipe(v.boolean(), v.description('Whether to include the block body with transactions')), false),
+})
+
+const RpcMethodsSchema = v.object({
+  includeSchemas: v.optional(v.pipe(v.boolean(), v.description('Whether to include parameter and result schemas for each method')), false),
+})
+
+const SearchDocsSchema = v.object({
+  query: v.pipe(v.string(), v.description('The search query to find relevant documentation sections. Use 2-4 specific keywords for best results (e.g., "transaction fee", "validator rewards", "web client setup")')),
+  limit: v.optional(v.pipe(v.number(), v.description('Maximum number of search results to return (default: 10)')), 10),
+})
+
+// Utility function for validating inputs with Valibot
+function validateInput<T>(schema: v.GenericSchema<T>, input: unknown): T {
+  try {
+    const result = v.parse(schema, input)
+    return result
+  }
+  catch (error) {
+    if (v.isValiError(error)) {
+      const issues = v.flatten(error.issues)
+      const errorMessages = Object.entries(issues.nested || {}).map(([key, value]) =>
+        `${key}: ${Array.isArray(value) ? value.join(', ') : value}`,
+      )
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Invalid input parameters: ${errorMessages.join('; ')}`,
+      )
+    }
+    throw new McpError(ErrorCode.InvalidParams, 'Invalid input parameters')
+  }
 }
 
 // Parse CLI arguments
@@ -101,11 +197,13 @@ class NimiqMcpServer {
       {
         capabilities: {
           tools: {},
+          resources: {},
         },
       },
     )
 
     this.setupToolHandlers()
+    this.setupResourceHandlers()
     this.setupErrorHandling()
   }
 
@@ -444,33 +542,7 @@ class NimiqMcpServer {
               additionalProperties: false,
             },
           },
-          {
-            name: 'get_nimiq_web_client_docs',
-            description: 'Get the complete Nimiq web-client documentation for LLMs',
-            inputSchema: {
-              type: 'object',
-              properties: {},
-              additionalProperties: false,
-            },
-          },
-          {
-            name: 'get_nimiq_protocol_docs',
-            description: 'Get the complete Nimiq protocol and learning documentation for LLMs',
-            inputSchema: {
-              type: 'object',
-              properties: {},
-              additionalProperties: false,
-            },
-          },
-          {
-            name: 'get_nimiq_validator_docs',
-            description: 'Get the complete Nimiq validator and staking documentation for LLMs',
-            inputSchema: {
-              type: 'object',
-              properties: {},
-              additionalProperties: false,
-            },
-          },
+
           {
             name: 'search_nimiq_docs',
             description: 'Search through the Nimiq documentation using full-text search. For best results, use specific keywords rather than full sentences (e.g., "validator staking" instead of "how do I stake with a validator")',
@@ -538,12 +610,7 @@ class NimiqMcpServer {
             return await this.handleGetNetworkInfo(args)
           case 'get_nimiq_rpc_methods':
             return await this.handleGetRpcMethods(args)
-          case 'get_nimiq_web_client_docs':
-            return await this.handleGetWebClientDocs(args)
-          case 'get_nimiq_protocol_docs':
-            return await this.handleGetProtocolDocs(args)
-          case 'get_nimiq_validator_docs':
-            return await this.handleGetValidatorDocs(args)
+
           case 'search_nimiq_docs':
             return await this.handleSearchDocs(args)
 
@@ -592,7 +659,8 @@ class NimiqMcpServer {
   }
 
   private handleCalculateSupplyAt(args: any): any {
-    const { timestampMs, network } = args
+    const validatedInput = validateInput(SupplyAtSchema, args)
+    const { timestampMs, network } = validatedInput
     const supply = posSupplyAt(timestampMs, { network })
     return {
       content: [
@@ -609,7 +677,8 @@ class NimiqMcpServer {
   }
 
   private async handleCalculateStakingRewards(args: any): Promise<any> {
-    const newArgs = { ...args }
+    const validatedInput = validateInput(StakingRewardsSchema, args)
+    const newArgs = { ...validatedInput }
 
     if (newArgs.stakedSupplyRatio === undefined || newArgs.stakedSupplyRatio === null) {
       try {
@@ -630,7 +699,7 @@ class NimiqMcpServer {
       }
     }
 
-    const rewards = calculateStakingRewards(newArgs)
+    const rewards = calculateStakingRewards(newArgs as any)
     return {
       content: [
         {
@@ -642,7 +711,8 @@ class NimiqMcpServer {
   }
 
   private async handleGetNimPrice(args: any): Promise<any> {
-    const { currencies, provider } = args
+    const validatedInput = validateInput(PriceSchema, args)
+    const { currencies, provider } = validatedInput
     const typedProvider = provider as Provider
     const vsCurrencies = currencies.map((c: string) => c.toUpperCase())
 
@@ -684,7 +754,8 @@ class NimiqMcpServer {
   }
 
   private async handleGetHead(args: any): Promise<any> {
-    const includeBody = args?.includeBody ?? false
+    const validatedInput = validateInput(HeadSchema, args)
+    const { includeBody } = validatedInput
 
     // Get the current block number (head)
     const [blockNumberSuccess, blockNumberError, blockNumber] = await getBlockNumber()
@@ -728,7 +799,8 @@ class NimiqMcpServer {
   }
 
   private async handleGetBlockByNumber(args: any): Promise<any> {
-    const { blockNumber, includeBody = false } = args
+    const validatedInput = validateInput(BlockByNumberSchema, args)
+    const { blockNumber, includeBody } = validatedInput
 
     const [success, error, block] = await getBlockByNumber(
       { blockNumber, includeBody },
@@ -757,10 +829,11 @@ class NimiqMcpServer {
   }
 
   private async handleGetBlockByHash(args: any): Promise<any> {
-    const { hash, includeBody = false } = args
+    const validatedInput = validateInput(BlockByHashSchema, args)
+    const { hash, includeBody } = validatedInput
 
     const [success, error, block] = await getBlockByHash(
-      { hash, includeBody },
+      { hash, includeBody: includeBody || false },
       {},
     )
 
@@ -786,13 +859,14 @@ class NimiqMcpServer {
   }
 
   private async handleGetAccount(args: any): Promise<any> {
-    const { address, withMetadata = false } = args
+    const validatedInput = validateInput(AccountSchema, args)
+    const { address, withMetadata } = validatedInput
 
     const params: any = {}
     if (withMetadata !== undefined)
       params.withMetadata = withMetadata
 
-    const [success, error, account] = await getAccountByAddress(address, params)
+    const [success, error, account] = await getAccountByAddress({ address }, params)
 
     if (!success || !account) {
       throw new McpError(
@@ -816,13 +890,14 @@ class NimiqMcpServer {
   }
 
   private async handleGetBalance(args: any): Promise<any> {
-    const { address, withMetadata = false } = args
+    const validatedInput = validateInput(AccountSchema, args)
+    const { address, withMetadata } = validatedInput
 
     const params: any = {}
     if (withMetadata !== undefined)
       params.withMetadata = withMetadata
 
-    const [success, error, account] = await getAccountByAddress(address, params)
+    const [success, error, account] = await getAccountByAddress({ address }, params)
 
     if (!success || !account) {
       throw new McpError(
@@ -849,9 +924,10 @@ class NimiqMcpServer {
   }
 
   private async handleGetTransaction(args: any): Promise<any> {
-    const { hash } = args
+    const validatedInput = validateInput(TransactionSchema, args)
+    const { hash } = validatedInput
 
-    const [success, error, transaction] = await getTransactionByHash(hash, {})
+    const [success, error, transaction] = await getTransactionByHash({ hash }, {})
 
     if (!success || !transaction) {
       throw new McpError(
@@ -875,7 +951,8 @@ class NimiqMcpServer {
   }
 
   private async handleGetTransactionsByAddress(args: any): Promise<any> {
-    const { address, max = 100, startAt, onlyConfirmed = true } = args
+    const validatedInput = validateInput(TransactionsByAddressSchema, args)
+    const { address, max, startAt, onlyConfirmed } = validatedInput
 
     const params: any = { address, max }
     if (startAt)
@@ -911,7 +988,8 @@ class NimiqMcpServer {
   }
 
   private async handleGetValidators(args: any): Promise<any> {
-    const { includeStakers = false, onlyActive = true } = args
+    const validatedInput = validateInput(ValidatorsSchema, args)
+    const { includeStakers, onlyActive } = validatedInput
 
     const params: any = {}
     if (includeStakers !== undefined)
@@ -973,9 +1051,10 @@ class NimiqMcpServer {
   }
 
   private async handleGetValidator(args: any): Promise<any> {
-    const { address } = args
+    const validatedInput = validateInput(ValidatorSchema, args)
+    const { address } = validatedInput
 
-    const [success, error, validator] = await getValidatorByAddress(address, {})
+    const [success, error, validator] = await getValidatorByAddress({ address }, {})
 
     if (!success || !validator) {
       throw new McpError(
@@ -999,7 +1078,8 @@ class NimiqMcpServer {
   }
 
   private async handleGetSlots(args: any): Promise<any> {
-    const { blockNumber } = args
+    const validatedInput = validateInput(SlotsSchema, args)
+    const { blockNumber } = validatedInput
 
     if (!blockNumber) {
       const [blockNumSuccess, blockNumError, currentBlockNumber] = await getBlockNumber()
@@ -1119,7 +1199,8 @@ class NimiqMcpServer {
   }
 
   private async handleGetRpcMethods(args: any): Promise<any> {
-    const { includeSchemas = false } = args
+    const validatedInput = validateInput(RpcMethodsSchema, args)
+    const { includeSchemas } = validatedInput
 
     try {
       // Get the latest release from GitHub API
@@ -1129,7 +1210,7 @@ class NimiqMcpServer {
       const openRpcDoc = await this.downloadOpenRpcDocument(latestRelease.version)
 
       // Extract methods from the OpenRPC document
-      const methods = this.extractRpcMethods(openRpcDoc, includeSchemas)
+      const methods = this.extractRpcMethods(openRpcDoc, includeSchemas ?? false)
 
       return {
         content: [
@@ -1235,108 +1316,6 @@ class NimiqMcpServer {
     })
   }
 
-  private async handleGetWebClientDocs(_args: any): Promise<any> {
-    try {
-      const docsUrl = 'https://nimiq.com/developers/build/web-client/llms-full.txt'
-
-      const response = await fetch(docsUrl)
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch web-client documentation: ${response.status} ${response.statusText}`)
-      }
-
-      const docsContent = await response.text()
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              source: docsUrl,
-              downloadedAt: new Date().toISOString(),
-              contentLength: docsContent.length,
-              documentation: docsContent,
-            }, null, 2),
-          },
-        ],
-      }
-    }
-    catch (error) {
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Failed to get web-client documentation: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  }
-
-  private async handleGetProtocolDocs(_args: any): Promise<any> {
-    try {
-      const docsUrl = 'https://www.nimiq.com/developers/learn/llms-full.txt'
-
-      const response = await fetch(docsUrl)
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch protocol documentation: ${response.status} ${response.statusText}`)
-      }
-
-      const docsContent = await response.text()
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              source: docsUrl,
-              downloadedAt: new Date().toISOString(),
-              contentLength: docsContent.length,
-              documentation: docsContent,
-            }, null, 2),
-          },
-        ],
-      }
-    }
-    catch (error) {
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Failed to get protocol documentation: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  }
-
-  private async handleGetValidatorDocs(_args: any): Promise<any> {
-    try {
-      const docsUrl = 'https://www.nimiq.com/developers/validators/llms-full.txt'
-
-      const response = await fetch(docsUrl)
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch validator documentation: ${response.status} ${response.statusText}`)
-      }
-
-      const docsContent = await response.text()
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              source: docsUrl,
-              downloadedAt: new Date().toISOString(),
-              contentLength: docsContent.length,
-              documentation: docsContent,
-            }, null, 2),
-          },
-        ],
-      }
-    }
-    catch (error) {
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Failed to get validator documentation: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  }
-
   private async initializeSearchIndex(): Promise<void> {
     if (this.searchIndex && this.cachedDocs) {
       return // Already initialized
@@ -1421,11 +1400,8 @@ class NimiqMcpServer {
 
   private async handleSearchDocs(args: any): Promise<any> {
     try {
-      const { query, limit = 10 } = args
-
-      if (!query || typeof query !== 'string') {
-        throw new Error('Query parameter is required and must be a string')
-      }
+      const validatedInput = validateInput(SearchDocsSchema, args)
+      const { query, limit } = validatedInput
 
       // Initialize search index if not already done
       await this.initializeSearchIndex()
@@ -1497,6 +1473,138 @@ class NimiqMcpServer {
     }
 
     return snippet
+  }
+
+  private setupResourceHandlers(): void {
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      return {
+        resources: [
+          {
+            uri: 'nimiq://docs/web-client',
+            mimeType: 'application/json',
+            name: 'Nimiq Web Client Documentation',
+            description: 'Complete documentation for the Nimiq web client, including APIs, examples, and best practices',
+          },
+          {
+            uri: 'nimiq://docs/protocol',
+            mimeType: 'application/json',
+            name: 'Nimiq Protocol Documentation',
+            description: 'Complete Nimiq protocol and learning documentation covering consensus, transactions, and architecture',
+          },
+          {
+            uri: 'nimiq://docs/validators',
+            mimeType: 'application/json',
+            name: 'Nimiq Validator Documentation',
+            description: 'Complete documentation for Nimiq validators and staking, including setup guides and rewards',
+          },
+        ],
+      }
+    })
+
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const { uri } = request.params
+
+      switch (uri) {
+        case 'nimiq://docs/web-client':
+          return await this.readWebClientDocsResource()
+        case 'nimiq://docs/protocol':
+          return await this.readProtocolDocsResource()
+        case 'nimiq://docs/validators':
+          return await this.readValidatorDocsResource()
+        default:
+          throw new McpError(
+            ErrorCode.InvalidRequest,
+            `Unknown resource URI: ${uri}`,
+          )
+      }
+    })
+  }
+
+  private async readWebClientDocsResource(): Promise<any> {
+    try {
+      const docsUrl = 'https://nimiq.com/developers/build/web-client/llms-full.txt'
+      const response = await fetch(docsUrl)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch web-client documentation: ${response.status} ${response.statusText}`)
+      }
+
+      const docsContent = await response.text()
+
+      return {
+        contents: [
+          {
+            uri: 'nimiq://docs/web-client',
+            mimeType: 'text/plain',
+            text: docsContent,
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to read web-client documentation: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  private async readProtocolDocsResource(): Promise<any> {
+    try {
+      const docsUrl = 'https://www.nimiq.com/developers/learn/llms-full.txt'
+      const response = await fetch(docsUrl)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch protocol documentation: ${response.status} ${response.statusText}`)
+      }
+
+      const docsContent = await response.text()
+
+      return {
+        contents: [
+          {
+            uri: 'nimiq://docs/protocol',
+            mimeType: 'text/plain',
+            text: docsContent,
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to read protocol documentation: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  private async readValidatorDocsResource(): Promise<any> {
+    try {
+      const docsUrl = 'https://www.nimiq.com/developers/validators/llms-full.txt'
+      const response = await fetch(docsUrl)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch validator documentation: ${response.status} ${response.statusText}`)
+      }
+
+      const docsContent = await response.text()
+
+      return {
+        contents: [
+          {
+            uri: 'nimiq://docs/validators',
+            mimeType: 'text/plain',
+            text: docsContent,
+          },
+        ],
+      }
+    }
+    catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to read validator documentation: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
   }
 
   private setupErrorHandling(): void {

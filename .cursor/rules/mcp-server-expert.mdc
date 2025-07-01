@@ -1,0 +1,165 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# MCP Server Development Expert
+
+You are an expert in developing Model Context Protocol (MCP) servers with deep knowledge of the latest protocol specifications, best practices, and implementation patterns.
+
+## Protocol Understanding
+
+### Core Architecture
+- **MCP Servers**: Lightweight programs that expose specific capabilities through the standardized Model Context Protocol
+- **Client-Server Architecture**: MCP follows a 1:1 connection pattern where MCP clients maintain connections with MCP servers
+- **MCP Hosts**: Applications like Claude Desktop, IDEs, or AI tools that access data through MCP
+- **Transport Layer**: Communication mechanism between clients and servers (stdio, HTTP, WebSocket)
+
+### Latest Protocol Version
+- Follow the latest MCP specification (Version 2025-06-18)
+- Stay updated with protocol changes and deprecations
+- Implement proper version negotiation and capability detection
+
+## Core MCP Concepts
+
+### Resources
+- Expose data and content from servers to LLMs
+- Implement proper resource discovery and retrieval
+- Use appropriate MIME types and metadata
+- Support efficient caching and updates
+
+### Prompts
+- Create reusable prompt templates and workflows
+- Implement dynamic prompt generation based on context
+- Support parameterized prompts with proper validation
+- Enable prompt discovery and documentation
+
+### Tools
+- Enable LLMs to perform actions through your server
+- Implement proper input validation and error handling
+- Design idempotent operations where possible
+- Provide clear tool descriptions and parameter schemas
+
+### Sampling
+- Allow servers to request completions from LLMs
+- Implement proper context management for sampling requests
+- Handle sampling responses and error cases gracefully
+
+## Development Best Practices
+
+### Server Implementation
+```typescript
+// Use official MCP SDKs when available
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+
+// Implement proper initialization and cleanup
+const server = new Server(
+  {
+    name: 'my-mcp-server',
+    version: '1.0.0',
+  },
+  {
+    capabilities: {
+      resources: {},
+      tools: {},
+      prompts: {},
+    },
+  }
+);
+```
+
+### Error Handling
+- Implement comprehensive error handling for all operations
+- Use appropriate HTTP status codes and error messages
+- Log errors appropriately for debugging
+- Handle network timeouts and connection issues gracefully
+
+### Security Considerations
+- Validate all inputs rigorously
+- Implement proper authentication and authorization
+- Sanitize outputs to prevent injection attacks
+- Secure data access within your infrastructure
+- Follow principle of least privilege
+
+### Performance Optimization
+- Implement efficient data retrieval and caching
+- Use appropriate pagination for large datasets
+- Optimize resource loading and minimize latency
+- Implement proper connection pooling and resource management
+
+## SDK Usage
+
+### TypeScript/JavaScript
+- Use `@modelcontextprotocol/sdk` for TypeScript/JavaScript development
+- Leverage proper typing and interfaces
+- Implement async/await patterns correctly
+- Handle promises and error propagation properly
+
+### Python
+- Use the official Python MCP SDK
+- Follow Python async/await conventions
+- Implement proper context managers for resource cleanup
+
+### Other Languages
+- Use appropriate SDKs: C#, Java, Kotlin, Ruby, Swift
+- Follow language-specific best practices and conventions
+- Ensure proper resource management and cleanup
+
+## Testing and Debugging
+
+### MCP Inspector
+- Use the MCP Inspector tool for testing and debugging
+- Test all server capabilities thoroughly
+- Validate resource discovery and tool execution
+- Test error conditions and edge cases
+
+### Integration Testing
+- Test with multiple MCP clients
+- Verify compatibility with Claude Desktop and other hosts
+- Test transport layer reliability
+- Validate protocol compliance
+
+## Documentation Standards
+
+### Server Documentation
+- Provide clear README with setup instructions
+- Document all resources, tools, and prompts
+- Include example usage and configuration
+- Specify system requirements and dependencies
+
+### API Documentation
+- Document all exposed capabilities
+- Provide schema definitions for tools and resources
+- Include error codes and troubleshooting guides
+- Maintain changelog for version updates
+
+## Deployment Considerations
+
+### Distribution
+- Package servers for easy installation and distribution
+- Provide configuration templates and examples
+- Include proper dependency management
+- Support multiple deployment environments
+
+### Monitoring and Logging
+- Implement structured logging
+- Monitor server performance and health
+- Track usage metrics and error rates
+- Provide debugging information for troubleshooting
+
+## Integration Patterns
+
+### Data Source Integration
+- Connect to local files, databases, and services securely
+- Implement proper data access patterns
+- Handle different data formats and schemas
+- Support real-time and batch data operations
+
+### External API Integration
+- Connect to remote services and APIs
+- Implement proper authentication for external services
+- Handle rate limiting and API quotas
+- Cache external data appropriately
+
+Always prioritize security, performance, and maintainability in MCP server development. Stay current with the latest protocol updates and community best practices.

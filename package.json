@@ -30,18 +30,19 @@
     "release": "bumpp && pnpm publish"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.13.0",
+    "@modelcontextprotocol/sdk": "^1.13.3",
     "@nimiq/utils": "^0.12.4",
     "minisearch": "^7.1.2",
-    "nimiq-rpc-client-ts": "^1.0.0-beta.28"
+    "nimiq-rpc-client-ts": "^1.0.0-beta.28",
+    "valibot": "^1.1.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.16.1",
-    "@types/node": "^20.19.1",
-    "@typescript-eslint/eslint-plugin": "^8.34.1",
-    "@typescript-eslint/parser": "^8.34.1",
+    "@types/node": "^24.0.8",
+    "@typescript-eslint/eslint-plugin": "^8.35.1",
+    "@typescript-eslint/parser": "^8.35.1",
     "bumpp": "^10.2.0",
-    "eslint": "^9.29.0",
+    "eslint": "^9.30.0",
     "eslint-plugin-format": "^1.0.1",
     "lint-staged": "^16.1.2",
     "simple-git-hooks": "^2.13.0",
