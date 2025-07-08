@@ -169,7 +169,9 @@ export default {
 </head>
 <body>
     <div class="header">
-        <div class="logo">🌐</div>
+        <div class="logo">
+            <img src="https://raw.githubusercontent.com/onmax/nimiq-mcp/refs/heads/main/.github/logo.svg" alt="Nimiq Logo" width="64" height="64" />
+        </div>
         <h1>Nimiq MCP Server</h1>
         <p>A Model Context Protocol server for Nimiq blockchain interactions</p>
         <div>
