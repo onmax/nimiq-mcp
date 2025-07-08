@@ -39,7 +39,7 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 
 ## Quick Start
 
-### Local Installation (Recommended for Desktop Apps)
+### Local Installation
 
 Add this MCP server to your MCP client configuration:
 
@@ -54,7 +54,7 @@ Add this MCP server to your MCP client configuration:
 }
 ```
 
-### Remote Access (Web Applications & Cross-Network)
+### Remote Access
 
 Use our hosted Cloudflare Workers deployment:
 
@@ -71,15 +71,40 @@ Use our hosted Cloudflare Workers deployment:
 
 > **Important**: The remote deployment provides a simplified HTTP interface. For full MCP compatibility, use the local installation.
 
-**Features of the remote deployment:**
-
-- ✅ No local installation required
-- ✅ Access from anywhere with internet connection
-- ✅ Automatic updates and maintenance
-- ✅ High availability with Cloudflare's global network
-- ✅ Built-in rate limiting and security
-
 > **Note**: The Cloudflare Workers deployment provides a simplified HTTP interface for demonstration and basic integration. For full MCP support with proper JSON-RPC protocol and all advanced features, use the local STDIO installation.
+
+### Remote Access With Authentication
+
+```json
+{
+  "mcpServers": {
+    "nimiq-remote": {
+      "url": "https://nimiq-mcp.workers.dev/sse",
+      "transport": "sse",
+      "env": {
+        "NIMIQ_RPC_URL": "https://your-rpc-endpoint.com",
+        "NIMIQ_RPC_USERNAME": "your-username",
+        "NIMIQ_RPC_PASSWORD": "your-password"
+      }
+    }
+  }
+}
+```
+
+## Deployment Comparison
+
+| Feature | Local Installation | Remote Access |
+|---------|-------------------|---------------|
+| **Setup** | Requires local installation | No local installation required |
+| **Transport** | STDIO | SSE |
+| **Network Access** | None required | Internet connection required |
+| **Security** | Inherently secure (no network exposure) | HTTPS with built-in rate limiting |
+| **Availability** | Depends on local system | High availability with Cloudflare |
+| **Updates** | Manual via npm | Automatic |
+| **Scalability** | Single process | Multiple concurrent clients |
+| **Protocol Support** | Full MCP JSON-RPC | Simplified HTTP interface |
+| **Performance** | Direct local access | CDN-optimized global access |
+| **Authentication** | CLI arguments | Environment variables |
 
 ### With Custom RPC Endpoint
 
