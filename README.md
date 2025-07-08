@@ -79,10 +79,6 @@ Add this to your MCP client configuration:
 | -------------------- | ------------------------------- | ---------------------------- |
 | **Setup**            | Zero installation required      | Requires Node.js/npm         |
 | **Updates**          | Automatic                       | Manual (npx pulls latest)    |
-| **Network**          | Requires internet connection    | Works offline after install  |
-| **Performance**      | Global CDN, may have latency    | Direct local execution       |
-| **Customization**    | Limited to default RPC          | Full RPC endpoint control    |
-| **Security**         | Built-in rate limiting          | Full local control           |
 | **Privacy**          | Requests go through our servers | Direct connection to RPC     |
 | **Availability**     | Depends on our service uptime   | Depends on local environment |
 | **Protocol Support** | SSE transport only              | Full MCP protocol support    |
