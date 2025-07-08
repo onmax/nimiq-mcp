@@ -1,0 +1,15 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "nimiq-mcp-server"
+main = "dist/worker.js"
+compatibility_date = "2023-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Default RPC URL (can be overridden with environment variables)
+DEFAULT_RPC_URL = "https://rpc.nimiqwatch.com"
+
+# Environment variables for sensitive data
+# Set these in Cloudflare dashboard or via wrangler secret put
+# NIMIQ_RPC_URL - Custom RPC endpoint URL
+# NIMIQ_RPC_USERNAME - RPC username for authentication
+# NIMIQ_RPC_PASSWORD - RPC password for authentication

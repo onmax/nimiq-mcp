@@ -39,6 +39,8 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 
 ## Quick Start
 
+### Local Installation (Recommended for Desktop Apps)
+
 Add this MCP server to your MCP client configuration:
 
 ```json
@@ -51,6 +53,28 @@ Add this MCP server to your MCP client configuration:
   }
 }
 ```
+
+### Remote Access (Web Applications & Cross-Network)
+
+Use our hosted Cloudflare Workers deployment:
+
+```json
+{
+  "mcpServers": {
+    "nimiq-remote": {
+      "url": "https://nimiq-mcp-server.workers.dev/sse",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+**Features of the remote deployment:**
+- ✅ No local installation required
+- ✅ Access from anywhere with internet connection
+- ✅ Automatic updates and maintenance
+- ✅ High availability with Cloudflare's global network
+- ✅ Built-in rate limiting and security
 
 ### With Custom RPC Endpoint
 
@@ -249,7 +273,7 @@ Resources are accessed via their URI and don't require parameters:
 
 ## Usage Examples
 
-### In Claude Desktop
+### Local Installation in Claude Desktop
 
 Add to your `claude_desktop_config.json`:
 
@@ -264,7 +288,22 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-### With Custom Configuration
+### Remote Access in Claude Desktop
+
+For web-based access without local installation:
+
+```json
+{
+  "mcpServers": {
+    "nimiq-remote": {
+      "url": "https://nimiq-mcp-server.workers.dev/sse",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+### With Custom Local Configuration
 
 ```json
 {
@@ -281,15 +320,34 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
+### In Web Applications
+
+Access the remote server directly via HTTP:
+
+```javascript
+// Connect to the remote MCP server
+const mcpClient = new SSEClientTransport(
+  new URL('https://nimiq-mcp-server.workers.dev/sse')
+);
+```
+
 ### In Other MCP Clients
 
-The server follows the MCP specification and can be used with any MCP-compatible client by running:
+The server follows the MCP specification and can be used with any MCP-compatible client:
 
+**Local installation:**
 ```bash
 npx nimiq-mcp
 ```
 
+**Remote access:**
+- **SSE Endpoint**: `https://nimiq-mcp-server.workers.dev/sse`
+- **Info Endpoint**: `https://nimiq-mcp-server.workers.dev/info`
+- **Health Check**: `https://nimiq-mcp-server.workers.dev/health`
+
 ## Development
+
+### Local Development
 
 ```bash
 # Install dependencies
@@ -308,6 +366,42 @@ pnpm run build
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | node dist/index.js
 ```
 
+### Cloudflare Workers Development
+
+```bash
+# Install dependencies including Wrangler
+pnpm install
+
+# Start local development server
+pnpm run dev:worker
+
+# Build and test worker deployment
+pnpm run build:worker
+
+# Deploy to Cloudflare
+pnpm run deploy
+```
+
+### Deployment to Cloudflare Workers
+
+See the complete [Deployment Guide](DEPLOYMENT.md) for detailed instructions.
+
+**Quick deployment steps:**
+
+1. **Set up Cloudflare account and get API token**
+2. **Configure GitHub secrets** (for automatic deployment):
+   - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_ACCOUNT_ID`
+3. **Push to main branch** - automatic deployment via GitHub Actions
+4. **Configure production secrets** (optional):
+   ```bash
+   wrangler secret put NIMIQ_RPC_URL
+   wrangler secret put NIMIQ_RPC_USERNAME  
+   wrangler secret put NIMIQ_RPC_PASSWORD
+   ```
+
+The worker will be available at: `https://nimiq-mcp-server.your-account.workers.dev`
+
 ## Architecture
 
 The MCP server is built using:
@@ -316,7 +410,23 @@ The MCP server is built using:
 - **[nimiq-rpc-client-ts](https://github.com/onmax/albatross-rpc-client-ts/)**: Fully typed Nimiq RPC client
 - **[rpc.nimiqwatch.com](https://rpc.nimiqwatch.com/)**: Free public Nimiq RPC service
 - **[Valibot](https://valibot.dev/)**: Runtime schema validation and type safety for all tool inputs
+- **[Cloudflare Workers](https://workers.cloudflare.com/)**: Edge compute platform for remote deployment
 - **TypeScript**: For type safety and better development experience
+
+### Deployment Options
+
+**Local Deployment (STDIO Transport)**
+- Runs as a local process communicating via stdin/stdout
+- Best for desktop applications and local development
+- Zero network configuration required
+- Inherently secure (no network exposure)
+
+**Remote Deployment (SSE Transport)**
+- Deployed on Cloudflare Workers edge network
+- Accessible from anywhere via HTTPS
+- Supports multiple concurrent clients
+- Built-in security, rate limiting, and global CDN
+- Automatic scaling and high availability
 
 ### Input Validation
 

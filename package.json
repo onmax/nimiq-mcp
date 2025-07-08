@@ -20,8 +20,13 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:worker": "tsc && wrangler deploy --dry-run",
     "dev": "tsx src/index.ts",
+    "dev:worker": "wrangler dev",
     "start": "node dist/index.js",
+    "deploy": "wrangler deploy",
+    "deploy:secrets": "npm run deploy:secrets:help",
+    "deploy:secrets:help": "echo 'Set secrets with: wrangler secret put NIMIQ_RPC_URL && wrangler secret put NIMIQ_RPC_USERNAME && wrangler secret put NIMIQ_RPC_PASSWORD'",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
@@ -38,6 +43,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.16.1",
+    "@cloudflare/workers-types": "^4.20241127.0",
     "@types/node": "^24.0.8",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
@@ -47,7 +53,8 @@
     "lint-staged": "^16.1.2",
     "simple-git-hooks": "^2.13.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^3.95.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
