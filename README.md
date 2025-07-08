@@ -62,7 +62,7 @@ Use our hosted Cloudflare Workers deployment:
 {
   "mcpServers": {
     "nimiq-remote": {
-      "url": "https://nimiq-mcp.workers.dev/sse",
+      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
       "transport": "sse"
     }
   }
@@ -301,7 +301,7 @@ For web-based access without local installation:
 {
   "mcpServers": {
     "nimiq-remote": {
-      "url": "https://nimiq-mcp.workers.dev/sse",
+      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
       "transport": "sse"
     }
   }
