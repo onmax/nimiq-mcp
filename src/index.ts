@@ -135,6 +135,15 @@ function validateInput<T>(schema: v.GenericSchema<T>, input: unknown): T {
 
 // Parse CLI arguments
 function parseArgs(): CliConfig {
+  // In Cloudflare Workers, process.argv is undefined, so return default config
+  if (typeof process === 'undefined' || !process.argv) {
+    return {
+      rpcUrl: 'https://rpc.nimiqwatch.com',
+      rpcUsername: undefined,
+      rpcPassword: undefined,
+    }
+  }
+
   const args = process.argv.slice(2)
   const config: CliConfig = {
     rpcUrl: 'https://rpc.nimiqwatch.com',
@@ -179,15 +188,15 @@ Examples:
   return config
 }
 
-class NimiqMcpServer {
-  private server: Server
+export class NimiqMcpServer {
+  public server: Server
   private rpcInitialized = false
-  private config: CliConfig
+  protected config: CliConfig
   private searchIndex: MiniSearch | null = null
   private cachedDocs: string | null = null
 
-  constructor() {
-    this.config = parseArgs()
+  constructor(config?: CliConfig) {
+    this.config = config || this.parseArgs()
 
     this.server = new Server(
       {
@@ -207,7 +216,13 @@ class NimiqMcpServer {
     this.setupErrorHandling()
   }
 
-  private initializeRpc(): void {
+  // Make parseArgs protected so it can be overridden
+  protected parseArgs(): CliConfig {
+    return parseArgs()
+  }
+
+  // Make this method public so it can be called from Worker
+  public initializeRpc(): void {
     if (this.rpcInitialized)
       return
 
@@ -223,7 +238,8 @@ class NimiqMcpServer {
     this.rpcInitialized = true
   }
 
-  private setupToolHandlers(): void {
+  // Make this method public so it can be called from Worker
+  public setupToolHandlers(): void {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
@@ -1475,7 +1491,8 @@ class NimiqMcpServer {
     return snippet
   }
 
-  private setupResourceHandlers(): void {
+  // Make this method public so it can be called from Worker
+  public setupResourceHandlers(): void {
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       return {
         resources: [
@@ -1612,10 +1629,13 @@ class NimiqMcpServer {
       console.error('[MCP Error]', error)
     }
 
-    process.on('SIGINT', async () => {
-      await this.server.close()
-      process.exit(0)
-    })
+    // Only set up process handlers if process is available (not in Workers)
+    if (typeof process !== 'undefined' && process.on) {
+      process.on('SIGINT', async () => {
+        await this.server.close()
+        process.exit(0)
+      })
+    }
   }
 
   async run(): Promise<void> {
@@ -1625,9 +1645,11 @@ class NimiqMcpServer {
   }
 }
 
-// Start the server
-const server = new NimiqMcpServer()
-server.run().catch((error) => {
-  console.error('Failed to start server:', error)
-  process.exit(1)
-})
+// Start the server only if not in Cloudflare Workers environment
+if (typeof process !== 'undefined' && process.argv && require.main === module) {
+  const server = new NimiqMcpServer()
+  server.run().catch((error) => {
+    console.error('Failed to start server:', error)
+    process.exit(1)
+  })
+}
