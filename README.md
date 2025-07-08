@@ -33,15 +33,45 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 
 ## Features
 
-- Nimiq blockchain tools for accounts, transactions, blocks, and validators
-- Easy setup with npx
-- Only read operations (sending transactions is not supported on purpose).
+- 🚀 **Two deployment options**: Zero-setup remote access OR local installation
+- 🔗 **Nimiq blockchain tools** for accounts, transactions, blocks, and validators  
+- ⚡ **Remote option**: No installation required - just add the URL to your MCP client
+- 🔧 **Local option**: Full control with `npx nimiq-mcp`
+- 🔒 **Read-only operations** (sending transactions not supported for security)
 
 ## Quick Start
 
-### Local Installation (Recommended for Desktop Apps)
+Choose one of two options:
 
-Add this MCP server to your MCP client configuration:
+### Option 1: Remote Access (Zero Setup) ⚡
+
+**Perfect for users who want no local installation**
+
+Add this to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "nimiq": {
+      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+**✅ Benefits:**
+- No local installation or dependencies
+- Always up-to-date (automatically updated)
+- Global CDN with high availability
+- Built-in rate limiting and security
+- Works from anywhere with internet
+
+### Option 2: Local Installation (Full Features) 🔧
+
+**For users who prefer running locally or need full control**
+
+Add this to your MCP client configuration:
 
 ```json
 {
@@ -54,32 +84,11 @@ Add this MCP server to your MCP client configuration:
 }
 ```
 
-### Remote Access (Web Applications & Cross-Network)
-
-Use our hosted Cloudflare Workers deployment:
-
-```json
-{
-  "mcpServers": {
-    "nimiq-remote": {
-      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
-      "transport": "sse"
-    }
-  }
-}
-```
-
-> **Important**: The remote deployment provides a simplified HTTP interface. For full MCP compatibility, use the local installation.
-
-**Features of the remote deployment:**
-
-- ✅ No local installation required
-- ✅ Access from anywhere with internet connection
-- ✅ Automatic updates and maintenance
-- ✅ High availability with Cloudflare's global network
-- ✅ Built-in rate limiting and security
-
-> **Note**: The Cloudflare Workers deployment provides a simplified HTTP interface for demonstration and basic integration. For full MCP support with proper JSON-RPC protocol and all advanced features, use the local STDIO installation.
+**✅ Benefits:**
+- Full MCP protocol support
+- No network dependency after installation
+- Customizable RPC endpoints
+- Maximum performance and privacy
 
 ### With Custom RPC Endpoint
 
@@ -278,7 +287,24 @@ Resources are accessed via their URI and don't require parameters:
 
 ## Usage Examples
 
-### Local Installation in Claude Desktop
+### Claude Desktop Configuration
+
+**Option 1: Remote (Zero Setup)**
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "nimiq": {
+      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+**Option 2: Local Installation**
 
 Add to your `claude_desktop_config.json`:
 
@@ -288,21 +314,6 @@ Add to your `claude_desktop_config.json`:
     "nimiq": {
       "command": "npx",
       "args": ["nimiq-mcp"]
-    }
-  }
-}
-```
-
-### Remote Access in Claude Desktop
-
-For web-based access without local installation:
-
-```json
-{
-  "mcpServers": {
-    "nimiq-remote": {
-      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
-      "transport": "sse"
     }
   }
 }
@@ -332,7 +343,7 @@ Access the remote server directly via HTTP:
 ```javascript
 // Connect to the remote MCP server
 const mcpClient = new SSEClientTransport(
-  new URL('https://nimiq-mcp.workers.dev/sse')
+  new URL('https://nimiq-mcp.je-cf9.workers.dev/sse')
 )
 ```
 
@@ -348,10 +359,10 @@ npx nimiq-mcp
 
 **Remote access:**
 
-- **Tools Endpoint**: `https://nimiq-mcp.workers.dev/tools`
-- **Info Endpoint**: `https://nimiq-mcp.workers.dev/info`
-- **Health Check**: `https://nimiq-mcp.workers.dev/health`
-- **Web Interface**: `https://nimiq-mcp.workers.dev/`
+- **Tools Endpoint**: `https://nimiq-mcp.je-cf9.workers.dev/tools`
+- **Info Endpoint**: `https://nimiq-mcp.je-cf9.workers.dev/info`
+- **Health Check**: `https://nimiq-mcp.je-cf9.workers.dev/health`
+- **Web Interface**: `https://nimiq-mcp.je-cf9.workers.dev/`
 
 ## Development
 
@@ -408,7 +419,7 @@ See the complete [Deployment Guide](DEPLOYMENT.md) for detailed instructions.
    wrangler secret put NIMIQ_RPC_PASSWORD
    ```
 
-The worker will be available at: `https://nimiq-mcp.your-account.workers.dev`
+The worker will be available at: `https://nimiq-mcp.je-cf9.workers.dev`
 
 ## Architecture
 

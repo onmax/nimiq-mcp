@@ -53,7 +53,7 @@ jobs:
           sleep 10
 
           # Test health endpoint
-          curl -f https://nimiq-mcp.${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.workers.dev/health || exit 1
+          curl -f https://nimiq-mcp.je-cf9.workers.dev/health || exit 1
 
           # Test info endpoint
-          curl -f https://nimiq-mcp.${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.workers.dev/info || exit 1
+          curl -f https://nimiq-mcp.je-cf9.workers.dev/info || exit 1
