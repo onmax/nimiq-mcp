@@ -125,21 +125,14 @@ Add this to your MCP client configuration:
 
 </details>
 
-## Available CLI Arguments
+## Available Arguments
 
-- `--rpc-url <url>`: Nimiq RPC endpoint URL (default: `https://rpc.nimiqwatch.com`)
-- `--rpc-username <username>`: RPC username for authentication (optional)
-- `--rpc-password <password>`: RPC password for authentication (optional)
-- `--help, -h`: Show help message
-
-## Default Configuration
-
-If no `--rpc-url` is provided, the server will use:
-
-- **URL**: `https://rpc.nimiqwatch.com` (Free public Nimiq RPC service)
-- **Authentication**: None (not required for public endpoint)
-
-The default endpoint at [rpc.nimiqwatch.com](https://rpc.nimiqwatch.com/) provides free rate-limited access to a Nimiq node.
+| CLI Arguments               | URL Arguments             | Description                     | Default                      |
+| --------------------------- | ------------------------- | ------------------------------- | ---------------------------- |
+| `--rpc-url <url>`           | `rpc-url=<url>`           | Nimiq RPC endpoint URL          | `https://rpc.nimiqwatch.com` |
+| `--rpc-username <username>` | `rpc-username=<username>` | RPC username for authentication | None                         |
+| `--rpc-password <password>` | `rpc-password=<password>` | RPC password for authentication | None                         |
+| `--help, -h`                | N/A                       | Show help message               | N/A                          |
 
 ## Available Tools and Resources
 
@@ -147,56 +140,34 @@ The MCP server provides comprehensive tools and resources for interacting with t
 
 ### Tools (17 available)
 
-Tools are for dynamic operations and computations:
-
-### Blockchain Data Tools
-
-- **`getHead`** - Get the current head block of the Nimiq blockchain
-- **`getBlockByNumber`** - Retrieve a specific block by its number
-- **`getBlockByHash`** - Retrieve a specific block by its hash
-- **`getEpochNumber`** - Get the current epoch number
-
-### Blockchain Calculation Tools
-
-- **`getSupply`** - Get the current circulating supply of NIM
-- **`calculateSupplyAt`** - Calculate the Nimiq PoS supply at a given time
-- **`calculateStakingRewards`** - Calculates the potential wealth accumulation based on staking
-- **`getPrice`** - Get the price of NIM against other currencies
-
-### Account & Balance Tools
-
-- **`getAccount`** - Get detailed account information by address
-- **`getBalance`** - Get the balance of a specific account address
-
-### Transaction Tools
-
-- **`getTransaction`** - Get detailed transaction information by hash
-- **`getTransactionsByAddress`** - Get transaction history for a specific address
-
-### Validator Tools
-
-- **`getValidators`** - Get information about all active validators
-- **`getValidator`** - Get detailed information about a specific validator
-- **`getSlots`** - Get validator slot information for current or specific block
-
-### Network Tools
-
-- **`getNetworkInfo`** - Get network status including peer count and consensus state
-
-### Documentation Tools
-
-- **`getRpcMethods`** - Get all available RPC methods from the latest OpenRPC document
-- **`searchDocs`** - Search through the Nimiq documentation using full-text search
+| Category                         | Tool                       | Description                                                    |
+| -------------------------------- | -------------------------- | -------------------------------------------------------------- |
+| **Blockchain Data Tools**        | `getHead`                  | Get the current head block of the Nimiq blockchain             |
+|                                  | `getBlockByNumber`         | Retrieve a specific block by its number                        |
+|                                  | `getBlockByHash`           | Retrieve a specific block by its hash                          |
+|                                  | `getEpochNumber`           | Get the current epoch number                                   |
+| **Blockchain Calculation Tools** | `getSupply`                | Get the current circulating supply of NIM                      |
+|                                  | `calculateSupplyAt`        | Calculate the Nimiq PoS supply at a given time                 |
+|                                  | `calculateStakingRewards`  | Calculates the potential wealth accumulation based on staking  |
+|                                  | `getPrice`                 | Get the price of NIM against other currencies                  |
+| **Account & Balance Tools**      | `getAccount`               | Get detailed account information by address                    |
+|                                  | `getBalance`               | Get the balance of a specific account address                  |
+| **Transaction Tools**            | `getTransaction`           | Get detailed transaction information by hash                   |
+|                                  | `getTransactionsByAddress` | Get transaction history for a specific address                 |
+| **Validator Tools**              | `getValidators`            | Get information about all active validators                    |
+|                                  | `getValidator`             | Get detailed information about a specific validator            |
+|                                  | `getSlots`                 | Get validator slot information for current or specific block   |
+| **Network Tools**                | `getNetworkInfo`           | Get network status including peer count and consensus state    |
+| **Documentation Tools**          | `getRpcMethods`            | Get all available RPC methods from the latest OpenRPC document |
+|                                  | `searchDocs`               | Search through the Nimiq documentation using full-text search  |
 
 ### Resources (3 available)
 
-Resources provide static content that can be cached by MCP clients:
-
-### Documentation Resources
-
-- **`nimiq://docs/web-client`** - Complete web-client documentation for LLMs
-- **`nimiq://docs/protocol`** - Complete Nimiq protocol and learning documentation for LLMs
-- **`nimiq://docs/validators`** - Complete validator and staking documentation for LLMs
+| Category                    | Resource                  | Description                                                 |
+| --------------------------- | ------------------------- | ----------------------------------------------------------- |
+| **Documentation Resources** | `nimiq://docs/web-client` | Complete web-client documentation for LLMs                  |
+|                             | `nimiq://docs/protocol`   | Complete Nimiq protocol and learning documentation for LLMs |
+|                             | `nimiq://docs/validators` | Complete validator and staking documentation for LLMs       |
 
 ### Tool Parameters
 
