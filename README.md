@@ -43,9 +43,7 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 
 Choose one of two options:
 
-### Option 1: Remote Access (Zero Setup) ⚡
-
-**Perfect for users who want no local installation**
+### Option 1: Remote Access
 
 Add this to your MCP client configuration:
 
@@ -60,17 +58,7 @@ Add this to your MCP client configuration:
 }
 ```
 
-**✅ Benefits:**
-
-- No local installation or dependencies
-- Always up-to-date (automatically updated)
-- Global CDN with high availability
-- Built-in rate limiting and security
-- Works from anywhere with internet
-
-### Option 2: Local Installation (Full Features) 🔧
-
-**For users who prefer running locally or need full control**
+### Option 2: Local Installation
 
 Add this to your MCP client configuration:
 
@@ -85,31 +73,40 @@ Add this to your MCP client configuration:
 }
 ```
 
-**✅ Benefits:**
+## Comparison
 
-- Full MCP protocol support
-- No network dependency after installation
-- Customizable RPC endpoints
-- Maximum performance and privacy
+| Feature              | Remote Access                   | Local Installation           |
+| -------------------- | ------------------------------- | ---------------------------- |
+| **Setup**            | Zero installation required      | Requires Node.js/npm         |
+| **Updates**          | Automatic                       | Manual (npx pulls latest)    |
+| **Network**          | Requires internet connection    | Works offline after install  |
+| **Performance**      | Global CDN, may have latency    | Direct local execution       |
+| **Customization**    | Limited to default RPC          | Full RPC endpoint control    |
+| **Security**         | Built-in rate limiting          | Full local control           |
+| **Privacy**          | Requests go through our servers | Direct connection to RPC     |
+| **Availability**     | Depends on our service uptime   | Depends on local environment |
+| **Protocol Support** | SSE transport only              | Full MCP protocol support    |
 
-### With Custom RPC Endpoint
+### With Custom RPC Endpoint & Auth
+
+<details>
+<summary>Remote (SSE)</summary>
 
 ```json
 {
   "mcpServers": {
     "nimiq": {
-      "command": "npx",
-      "args": [
-        "nimiq-mcp",
-        "--rpc-url",
-        "https://your-custom-rpc-endpoint.com"
-      ]
+      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse?rpc-url=https://your-rpc-endpoint.com&rpc-username=your-username&rpc-password=your-password",
+      "transport": "sse"
     }
   }
 }
 ```
 
-### With Authentication
+</details>
+
+<details>
+<summary>Local (npx)</summary>
 
 ```json
 {
@@ -129,6 +126,8 @@ Add this to your MCP client configuration:
   }
 }
 ```
+
+</details>
 
 ## Available CLI Arguments
 
