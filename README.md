@@ -34,10 +34,15 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 ## Features
 
 - 🚀 **Two deployment options**: Zero-setup remote access OR local installation
-- 🔗 **Nimiq blockchain tools** for accounts, transactions, blocks, and validators
+- 🔗 **18 comprehensive tools** for accounts, transactions, blocks, validators, and more
+- 🤖 **MCP 2025-06-18 Protocol**: Latest specification with enhanced features
+- 💬 **Interactive Tools**: Elicitation support for guided user experiences
 - ⚡ **Remote option**: No installation required - just add the URL to your MCP client
 - 🔧 **Local option**: Full control with `npx nimiq-mcp`
+- 🔍 **Advanced search**: Full-text search through comprehensive Nimiq documentation
+- 📊 **Enhanced calculations**: Interactive staking rewards calculator with smart defaults
 - 🔒 **Read-only operations** (sending transactions not supported for security)
+- ✅ **Input validation**: Comprehensive schema validation for all tool inputs
 
 ## Quick Start
 
@@ -138,28 +143,29 @@ Add this to your MCP client configuration:
 
 The MCP server provides comprehensive tools and resources for interacting with the Nimiq blockchain:
 
-### Tools (17 available)
+### Tools (18 available)
 
-| Category                         | Tool                       | Description                                                    |
-| -------------------------------- | -------------------------- | -------------------------------------------------------------- |
-| **Blockchain Data Tools**        | `getHead`                  | Get the current head block of the Nimiq blockchain             |
-|                                  | `getBlockByNumber`         | Retrieve a specific block by its number                        |
-|                                  | `getBlockByHash`           | Retrieve a specific block by its hash                          |
-|                                  | `getEpochNumber`           | Get the current epoch number                                   |
-| **Blockchain Calculation Tools** | `getSupply`                | Get the current circulating supply of NIM                      |
-|                                  | `calculateSupplyAt`        | Calculate the Nimiq PoS supply at a given time                 |
-|                                  | `calculateStakingRewards`  | Calculates the potential wealth accumulation based on staking  |
-|                                  | `getPrice`                 | Get the price of NIM against other currencies                  |
-| **Account & Balance Tools**      | `getAccount`               | Get detailed account information by address                    |
-|                                  | `getBalance`               | Get the balance of a specific account address                  |
-| **Transaction Tools**            | `getTransaction`           | Get detailed transaction information by hash                   |
-|                                  | `getTransactionsByAddress` | Get transaction history for a specific address                 |
-| **Validator Tools**              | `getValidators`            | Get information about all active validators                    |
-|                                  | `getValidator`             | Get detailed information about a specific validator            |
-|                                  | `getSlots`                 | Get validator slot information for current or specific block   |
-| **Network Tools**                | `getNetworkInfo`           | Get network status including peer count and consensus state    |
-| **Documentation Tools**          | `getRpcMethods`            | Get all available RPC methods from the latest OpenRPC document |
-|                                  | `searchDocs`               | Search through the Nimiq documentation using full-text search  |
+| Category                         | Tool                           | Description                                                    |
+| -------------------------------- | ------------------------------ | -------------------------------------------------------------- |
+| **Blockchain Data Tools**        | `getHead`                      | Get the current head block of the Nimiq blockchain             |
+|                                  | `getBlockByNumber`             | Retrieve a specific block by its number                        |
+|                                  | `getBlockByHash`               | Retrieve a specific block by its hash                          |
+|                                  | `getEpochNumber`               | Get the current epoch number                                   |
+| **Blockchain Calculation Tools** | `getSupply`                    | Get the current circulating supply of NIM                      |
+|                                  | `calculateSupplyAt`            | Calculate the Nimiq PoS supply at a given time                 |
+|                                  | `calculateStakingRewards`      | Calculates the potential wealth accumulation based on staking  |
+|                                  | `interactiveStakingCalculator` | **NEW**: Interactive calculator with elicitation support       |
+|                                  | `getPrice`                     | Get the price of NIM against other currencies                  |
+| **Account & Balance Tools**      | `getAccount`                   | Get detailed account information by address                    |
+|                                  | `getBalance`                   | Get the balance of a specific account address                  |
+| **Transaction Tools**            | `getTransaction`               | Get detailed transaction information by hash                   |
+|                                  | `getTransactionsByAddress`     | Get transaction history for a specific address                 |
+| **Validator Tools**              | `getValidators`                | Get information about all active validators                    |
+|                                  | `getValidator`                 | Get detailed information about a specific validator            |
+|                                  | `getSlots`                     | Get validator slot information for current or specific block   |
+| **Network Tools**                | `getNetworkInfo`               | Get network status including peer count and consensus state    |
+| **Documentation Tools**          | `getRpcMethods`                | Get all available RPC methods from the latest OpenRPC document |
+|                                  | `searchDocs`                   | Search through the Nimiq documentation using full-text search  |
 
 ### Resources (3 available)
 
@@ -399,6 +405,16 @@ The MCP server is built using:
 - **[Valibot](https://valibot.dev/)**: Runtime schema validation and type safety for all tool inputs
 - **[Cloudflare Workers](https://workers.cloudflare.com/)**: Edge compute platform for remote deployment
 - **TypeScript**: For type safety and better development experience
+
+### MCP 2025-06-18 Protocol Features
+
+This server implements the latest Model Context Protocol specification (2025-06-18) with enhanced features:
+
+- **Elicitation Support**: Interactive tools can request additional information from users during execution
+- **Enhanced Input Validation**: Comprehensive schema validation with detailed error messages
+- **Structured Tool Responses**: JSON Schema definitions for better LLM comprehension
+- **Improved Error Handling**: Standardized error responses with proper MCP error codes
+- **Protocol Version Compliance**: Full support for the latest MCP specification requirements
 
 ### Deployment Options
 
