@@ -1,6 +1,6 @@
 # :schema node_modules/wrangler/config-schema.json
 name = "nimiq-mcp"
-main = "dist/worker.js"
+main = "dist/src/worker.js"
 compatibility_date = "2023-12-01"
 compatibility_flags = [ "nodejs_compat" ]
 
