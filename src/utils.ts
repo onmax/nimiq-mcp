@@ -1,25 +1,12 @@
-import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
 import * as v from 'valibot'
 
-// Get version from package.json
-function getVersion(): string {
-  try {
-    const __dirname = dirname(fileURLToPath(import.meta.url))
-    const packageJsonPath = join(__dirname, '..', 'package.json')
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
-    return packageJson.version
-  }
-  catch (error) {
-    console.warn('Could not read version from package.json:', error)
-    return '0.0.8'
-  }
-}
+// Declare the global version variable defined by Vite
+declare const __VERSION__: string
 
-export const VERSION = getVersion()
+// Export version defined at build time
+export const VERSION = __VERSION__
 
 export interface CliConfig {
   rpcUrl: string

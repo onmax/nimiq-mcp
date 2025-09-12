@@ -1,5 +1,6 @@
 import { initRpcClient } from 'nimiq-rpc-client-ts/client'
 import { NimiqMcpServer } from './index.js'
+import { VERSION } from './utils.js'
 
 export interface Env {
   DEFAULT_RPC_URL: string
@@ -54,7 +55,7 @@ export default {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         service: 'nimiq-mcp',
-        version: '1.0.0',
+        version: VERSION,
       }), {
         status: 200,
         headers: {
@@ -69,7 +70,7 @@ export default {
       const rpcUrl = env.NIMIQ_RPC_URL || env.DEFAULT_RPC_URL
       return new Response(JSON.stringify({
         name: 'nimiq-mcp',
-        version: '1.0.0',
+        version: VERSION,
         description: 'MCP server for Nimiq blockchain interactions',
         rpcEndpoint: rpcUrl,
         hasAuth: !!(env.NIMIQ_RPC_USERNAME && env.NIMIQ_RPC_PASSWORD),
