@@ -1,0 +1,86 @@
+name: Monthly Health Check
+
+on:
+  schedule:
+    # Run on the 1st of every month at 9:00 AM UTC
+    - cron: '0 9 1 * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run health checks
+        id: health-check
+        run: |
+          echo "Starting health checks..."
+
+          # Run typecheck
+          echo "Running typecheck..."
+          pnpm typecheck
+
+          # Run tests
+          echo "Running tests..."
+          pnpm test
+
+          # Run lint
+          echo "Running lint..."
+          pnpm lint
+
+          # Try to build
+          echo "Running build..."
+          pnpm build
+
+          echo "All checks passed!"
+
+      - name: Send Slack notification on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            🚨 Monthly Health Check Failed for Nimiq MCP
+
+            Repository: ${{ github.repository }}
+            Workflow: ${{ github.workflow }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+
+            The monthly health check has detected issues. Please review the logs and fix any problems.
+
+            View logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send Slack notification on success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          fields: repo,workflow,ref
+          text: |
+            ✅ Monthly Health Check Passed for Nimiq MCP
+
+            All systems are running smoothly! The monthly check completed successfully.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
