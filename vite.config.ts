@@ -22,6 +22,8 @@ export default defineConfig({
         'minisearch',
         'nimiq-rpc-client-ts',
         'valibot',
+        'cloudflare:node',
+        /^node:/,
       ],
       output: {
         preserveModules: true,
