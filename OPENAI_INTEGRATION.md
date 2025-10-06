@@ -4,49 +4,67 @@ This guide shows how to integrate the Nimiq MCP Server with OpenAI's Agents SDK.
 
 ## Overview
 
-The Nimiq MCP Server is compatible with OpenAI's Agents SDK when run locally via `npx`.
+The Nimiq MCP Server is compatible with OpenAI's Agents SDK via:
 
-> **⚠️ Important**: The remote Cloudflare Workers deployment (`https://nimiq-mcp.je-cf9.workers.dev`) does NOT currently support the MCP protocol. You must use the local deployment for OpenAI integration.
+- **Remote deployment** (Cloudflare Workers) - Full MCP protocol support at `/mcp` endpoint
+- **Local deployment** (`npx nimiq-mcp`) - STDIO transport
 
 ## Quick Start
 
-### Local MCP Server Setup
+### Option 1: Remote Deployment (Recommended)
 
-First, start the local MCP server:
-
-```bash
-npx nimiq-mcp
-```
-
-This will start the MCP server with full protocol support on your local machine.
-
-### Python Configuration
+Use the hosted Cloudflare Workers deployment with full MCP protocol support:
 
 ```python
 from openai import OpenAI
-# Note: Use local stdio transport, not HTTP/SSE for now
+from mcp import MCPServerStreamableHttp
 
-# Initialize OpenAI client
 client = OpenAI(api_key="your-api-key")
 
-# For local MCP servers, you'll need to configure stdio transport
-# The HTTP/SSE remote endpoint is not yet supported
+# Configure remote Nimiq MCP Server
+nimiq_mcp = MCPServerStreamableHttp(
+    name="Nimiq Ecosystem",
+    params={
+        "url": "https://nimiq-mcp.je-cf9.workers.dev/mcp",
+        "timeout": 30
+    },
+    cache_tools_list=True,
+    max_retry_attempts=3
+)
 
 # Use with OpenAI Agent
 agent = client.agents.create(
     model="gpt-5",  # or gpt-5-mini, gpt-5-nano
-    tools=[{
-        "type": "mcp",
-        "server_label": "nimiq",
-        "command": "npx",
-        "args": ["nimiq-mcp"]
-    }],
+    tools=[nimiq_mcp],
     instructions="""You are a helpful Nimiq ecosystem assistant with comprehensive access to:
     - Real-time blockchain data and analytics
     - Complete web client documentation and tutorials
     - Protocol specifications and validator guides
     - Full-text search across all Nimiq documentation""",
     reasoning_effort=3  # 1-5 scale, replaces temperature
+)
+```
+
+### Option 2: Local Deployment
+
+For local development or privacy:
+
+```bash
+npx nimiq-mcp
+```
+
+```python
+# Use with OpenAI Agent (stdio transport)
+agent = client.agents.create(
+    model="gpt-5",
+    tools=[{
+        "type": "mcp",
+        "server_label": "nimiq",
+        "command": "npx",
+        "args": ["nimiq-mcp"]
+    }],
+    instructions="""...""",
+    reasoning_effort=3
 )
 ```
 
@@ -247,7 +265,32 @@ servers:
 
 ## Deployment Options
 
-### Local Installation (Required for OpenAI)
+### Remote Cloudflare Deployment (Recommended)
+
+The production deployment with full MCP protocol support:
+
+```
+https://nimiq-mcp.je-cf9.workers.dev/mcp
+```
+
+**Benefits:**
+
+- ✅ Full MCP protocol support at `/mcp` endpoint
+- ✅ Zero setup required
+- ✅ Global CDN (low latency worldwide)
+- ✅ Automatic updates
+- ✅ Works with OpenAI Agents SDK
+- ✅ Available endpoints: `/health`, `/info`, `/tools`, `/mcp`
+
+**Preview Deployments:**
+
+Each pull request automatically gets its own preview deployment:
+
+```
+https://nimiq-mcp-pr-{PR_NUMBER}.je-cf9.workers.dev/mcp
+```
+
+### Local Installation
 
 Run locally via npx:
 
@@ -257,22 +300,10 @@ npx nimiq-mcp
 
 **Benefits:**
 
-- Full MCP protocol support
-- Works with OpenAI Agents SDK
+- Full control over configuration
 - Direct RPC connection
-- Privacy
-- Full control
-
-### Remote Cloudflare Deployment (Not MCP Compatible Yet)
-
-The remote deployment at `https://nimiq-mcp.je-cf9.workers.dev` provides simplified HTTP endpoints but does NOT support the MCP protocol yet:
-
-- ✅ `/health` - Health check
-- ✅ `/info` - Server information
-- ✅ `/tools` - List available tools
-- ❌ `/mcp` or `/sse` - Not implemented (requires Node.js-specific transport layer)
-
-For MCP protocol support (OpenAI/ChatGPT integration), use the local `npx` version.
+- Privacy (data doesn't leave your machine)
+- Custom RPC endpoints with authentication
 
 ## Troubleshooting
 
