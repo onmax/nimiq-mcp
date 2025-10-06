@@ -36,6 +36,7 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
 - 🚀 **Two deployment options**: Zero-setup remote access OR local installation
 - 🔗 **18 comprehensive tools** for accounts, transactions, blocks, validators, and more
 - 🤖 **MCP 2025-06-18 Protocol**: Latest specification with enhanced features
+- 🤝 **OpenAI Compatible**: Works seamlessly with OpenAI Agents SDK
 - 💬 **Interactive Tools**: Elicitation support for guided user experiences
 - ⚡ **Remote option**: No installation required - just add the URL to your MCP client
 - 🔧 **Local option**: Full control with `npx nimiq-mcp`
@@ -257,6 +258,49 @@ Resources are accessed via their URI and don't require parameters:
   ],
   "searchedAt": "2025-01-20T12:00:00.000Z"
 }
+```
+
+## OpenAI Integration
+
+The Nimiq MCP Server is compatible with OpenAI's Agents SDK via **remote deployment** (Cloudflare Workers) or **local installation**. See [OPENAI_INTEGRATION.md](./OPENAI_INTEGRATION.md) for detailed documentation.
+
+### Quick Start with OpenAI
+
+**Remote (Recommended):**
+
+```python
+from openai import OpenAI
+from mcp import MCPServerStreamableHttp
+
+client = OpenAI(api_key="your-api-key")
+
+nimiq_mcp = MCPServerStreamableHttp(
+    name="Nimiq Ecosystem",
+    params={"url": "https://nimiq-mcp.je-cf9.workers.dev/mcp"}
+)
+
+agent = client.agents.create(
+    model="gpt-5",  # or gpt-5-mini, gpt-5-nano
+    tools=[nimiq_mcp],
+    instructions="You are a helpful Nimiq ecosystem assistant with access to blockchain data, documentation, and tutorials.",
+    reasoning_effort=3  # 1-5 scale
+)
+```
+
+**Local:**
+
+```python
+agent = client.agents.create(
+    model="gpt-5",
+    tools=[{
+        "type": "mcp",
+        "server_label": "nimiq",
+        "command": "npx",
+        "args": ["nimiq-mcp"]
+    }],
+    instructions="...",
+    reasoning_effort=3
+)
 ```
 
 ## Usage Examples

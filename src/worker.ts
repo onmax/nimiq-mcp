@@ -1,3 +1,9 @@
+import type { Server } from 'node:http'
+import { Buffer } from 'node:buffer'
+import { createServer } from 'node:http'
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
+// @ts-expect-error - Cloudflare Workers specific module
+import { handleAsNodeRequest } from 'cloudflare:node'
 import { initRpcClient } from 'nimiq-rpc-client-ts/client'
 import { NimiqMcpServer } from './index.js'
 import { VERSION } from './utils.js'
@@ -18,24 +24,92 @@ function createConfig(env: Env): { rpcUrl: string, rpcUsername?: string, rpcPass
   }
 }
 
-// Initialize a global server instance
-let globalMcpServer: NimiqMcpServer | null = null
-
-function getOrCreateServer(config: any): NimiqMcpServer {
-  if (!globalMcpServer) {
-    globalMcpServer = new NimiqMcpServer(config)
-    globalMcpServer.initializeRpc()
-  }
-  return globalMcpServer
-}
-
 // CORS headers for remote MCP access
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Mcp-Session-Id',
+  'Access-Control-Expose-Headers': 'Mcp-Session-Id',
   'Access-Control-Max-Age': '86400',
 }
+
+// Global MCP server for session management
+const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {}
+
+// Create Node.js HTTP server for MCP protocol
+function createMcpHttpServer(env: Env): Server {
+  return createServer(async (req, res) => {
+    // Add CORS headers
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      res.setHeader(key, value)
+    })
+
+    const config = createConfig(env)
+
+    // Initialize RPC if needed
+    const rpcConfig: any = { url: config.rpcUrl }
+    if (config.rpcUsername && config.rpcPassword) {
+      rpcConfig.auth = {
+        username: config.rpcUsername,
+        password: config.rpcPassword,
+      }
+    }
+    initRpcClient(rpcConfig)
+
+    // Get or create transport based on session ID
+    const sessionId = req.headers['mcp-session-id'] as string | undefined
+    let transport: StreamableHTTPServerTransport
+
+    if (sessionId && transports[sessionId]) {
+      transport = transports[sessionId]
+    }
+    else if (req.method === 'POST') {
+      // Create new transport for new sessions
+      transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => `mcp-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        onsessioninitialized: (id) => {
+          transports[id] = transport
+        },
+      })
+
+      // Cleanup on close
+      transport.onclose = () => {
+        if (transport.sessionId) {
+          delete transports[transport.sessionId]
+        }
+      }
+
+      // Create and connect MCP server
+      const mcpServer = new NimiqMcpServer(config)
+      mcpServer.initializeRpc()
+      await mcpServer.server.connect(transport)
+    }
+    else {
+      res.writeHead(400)
+      res.end(JSON.stringify({ error: 'Bad Request' }))
+      return
+    }
+
+    // Get request body
+    const chunks: Buffer[] = []
+    req.on('data', chunk => chunks.push(chunk))
+    req.on('end', async () => {
+      try {
+        const body = Buffer.concat(chunks).toString()
+        const parsedBody = body ? JSON.parse(body) : undefined
+        await transport.handleRequest(req as any, res as any, parsedBody)
+      }
+      catch (error) {
+        console.error('MCP request error:', error)
+        res.writeHead(500)
+        res.end(JSON.stringify({ error: 'Internal server error' }))
+      }
+    })
+  })
+}
+
+// Start the MCP server on port 3000
+let mcpServer: ReturnType<typeof createServer> | null = null
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -47,6 +121,18 @@ export default {
         status: 200,
         headers: corsHeaders,
       })
+    }
+
+    // MCP protocol endpoint using Node.js HTTP server
+    if (url.pathname === '/mcp') {
+      // Initialize MCP server if not already running
+      if (!mcpServer) {
+        mcpServer = createMcpHttpServer(env)
+        mcpServer.listen(3000)
+      }
+
+      // Forward to Node.js HTTP server
+      return handleAsNodeRequest(3000, request)
     }
 
     // Health check endpoint
@@ -75,8 +161,9 @@ export default {
         rpcEndpoint: rpcUrl,
         hasAuth: !!(env.NIMIQ_RPC_USERNAME && env.NIMIQ_RPC_PASSWORD),
         capabilities: ['tools', 'resources'],
-        transport: 'http',
-        note: 'This is a simplified HTTP interface. For full MCP support, use the local STDIO version.',
+        transports: ['http', 'mcp'],
+        mcpEndpoint: '/mcp',
+        note: 'Full MCP protocol support available at /mcp endpoint. Also available via npx nimiq-mcp for local STDIO transport.',
       }), {
         status: 200,
         headers: {
@@ -99,9 +186,6 @@ export default {
           }
         }
         initRpcClient(rpcConfig)
-
-        // Initialize server (not used in this simplified endpoint but needed for RPC setup)
-        getOrCreateServer(config)
 
         // Return a simplified list of available tools
         return new Response(JSON.stringify({
@@ -186,8 +270,8 @@ export default {
     
     <div class="endpoint">
         <h3>🔗 MCP Connection</h3>
-        <p><strong>POST</strong> <code class="code">/sse</code></p>
-        <p>Main MCP endpoint using Server-Sent Events transport for real-time communication with MCP clients.</p>
+        <p><strong>POST</strong> <code class="code">/mcp</code></p>
+        <p>Main MCP endpoint using Streamable HTTP transport for real-time communication with MCP clients.</p>
     </div>
 
     <div class="endpoint">
@@ -209,8 +293,8 @@ export default {
     "nimiq-remote": {
       "command": "npx",
       "args": ["@modelcontextprotocol/server-everything"],
-      "transport": "sse",
-      "url": "${url.origin}/sse"
+      "transport": "http",
+      "url": "${url.origin}/mcp"
     }
   }
 }</pre>
@@ -246,7 +330,7 @@ export default {
     return new Response(JSON.stringify({
       error: 'Not Found',
       message: `Path ${url.pathname} not found`,
-      availableEndpoints: ['/', '/sse', '/health', '/info'],
+      availableEndpoints: ['/', '/mcp', '/health', '/info', '/tools'],
       timestamp: new Date().toISOString(),
     }), {
       status: 404,
