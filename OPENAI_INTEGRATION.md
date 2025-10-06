@@ -4,34 +4,43 @@ This guide shows how to integrate the Nimiq MCP Server with OpenAI's Agents SDK.
 
 ## Overview
 
-The Nimiq MCP Server is fully compatible with OpenAI's Agents SDK, allowing you to use Nimiq blockchain tools in your AI agents powered by OpenAI.
+The Nimiq MCP Server is compatible with OpenAI's Agents SDK when run locally via `npx`.
+
+> **⚠️ Important**: The remote Cloudflare Workers deployment (`https://nimiq-mcp.je-cf9.workers.dev`) does NOT currently support the MCP protocol. You must use the local deployment for OpenAI integration.
 
 ## Quick Start
+
+### Local MCP Server Setup
+
+First, start the local MCP server:
+
+```bash
+npx nimiq-mcp
+```
+
+This will start the MCP server with full protocol support on your local machine.
 
 ### Python Configuration
 
 ```python
 from openai import OpenAI
-from mcp import MCPServerStreamableHttp
+# Note: Use local stdio transport, not HTTP/SSE for now
 
 # Initialize OpenAI client
 client = OpenAI(api_key="your-api-key")
 
-# Configure Nimiq MCP Server
-nimiq_mcp = MCPServerStreamableHttp(
-    name="Nimiq Ecosystem",
-    params={
-        "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
-        "timeout": 30
-    },
-    cache_tools_list=True,
-    max_retry_attempts=3
-)
+# For local MCP servers, you'll need to configure stdio transport
+# The HTTP/SSE remote endpoint is not yet supported
 
 # Use with OpenAI Agent
 agent = client.agents.create(
     model="gpt-5",  # or gpt-5-mini, gpt-5-nano
-    tools=[nimiq_mcp],
+    tools=[{
+        "type": "mcp",
+        "server_label": "nimiq",
+        "command": "npx",
+        "args": ["nimiq-mcp"]
+    }],
     instructions="""You are a helpful Nimiq ecosystem assistant with comprehensive access to:
     - Real-time blockchain data and analytics
     - Complete web client documentation and tutorials
@@ -41,17 +50,26 @@ agent = client.agents.create(
 )
 ```
 
-### With Authentication (Optional)
+### With Custom RPC Endpoint
 
 If you're using a custom RPC endpoint with authentication:
 
 ```python
-nimiq_mcp = MCPServerStreamableHttp(
-    name="Nimiq Blockchain",
-    params={
-        "url": "https://nimiq-mcp.je-cf9.workers.dev/sse?rpc-url=https://your-rpc.com&rpc-username=user&rpc-password=pass",
-        "timeout": 30
-    }
+agent = client.agents.create(
+    model="gpt-5",
+    tools=[{
+        "type": "mcp",
+        "server_label": "nimiq",
+        "command": "npx",
+        "args": [
+            "nimiq-mcp",
+            "--rpc-url", "https://your-rpc.com",
+            "--rpc-username", "your-username",
+            "--rpc-password", "your-password"
+        ]
+    }],
+    instructions="""...""",
+    reasoning_effort=3
 )
 ```
 
@@ -70,8 +88,8 @@ const agent = await client.agents.create({
     {
       type: 'mcp',
       server_label: 'nimiq',
-      server_url: 'https://nimiq-mcp.je-cf9.workers.dev/sse',
-      require_approval: 'never'
+      command: 'npx',
+      args: ['nimiq-mcp']
     }
   ],
   instructions: `You are a helpful Nimiq ecosystem assistant with comprehensive access to:
@@ -85,40 +103,7 @@ const agent = await client.agents.create({
 
 ## Configuration Options
 
-### HostedMCPTool Configuration
-
-```python
-from openai.agents import HostedMCPTool
-
-HostedMCPTool(
-    tool_config={
-        "type": "mcp",
-        "server_label": "nimiq",
-        "server_url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
-        "require_approval": "never"  # or "always" for user confirmation
-    }
-)
-```
-
-### MCPServerStreamableHttp Configuration
-
-```python
-from mcp import MCPServerStreamableHttp
-
-MCPServerStreamableHttp(
-    name="Nimiq Blockchain",
-    params={
-        "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
-        "headers": {  # Optional: Custom headers for authentication
-            "Authorization": f"Bearer {token}"
-        },
-        "timeout": 30
-    },
-    cache_tools_list=True,  # Cache tool definitions for better performance
-    max_retry_attempts=3,  # Automatic retry on failures
-    retry_backoff_seconds_base=2
-)
-```
+> **Note**: Remote HTTP/SSE endpoints are not yet supported. Use local stdio transport with `npx nimiq-mcp`.
 
 ## Available Tools
 
@@ -262,16 +247,7 @@ servers:
 
 ## Deployment Options
 
-### Option 1: Remote (Recommended)
-
-Use the hosted Cloudflare Workers deployment:
-
-- URL: `https://nimiq-mcp.je-cf9.workers.dev/sse`
-- Zero setup required
-- Automatic updates
-- Global CDN
-
-### Option 2: Local Installation
+### Local Installation (Required for OpenAI)
 
 Run locally via npx:
 
@@ -279,13 +255,24 @@ Run locally via npx:
 npx nimiq-mcp
 ```
 
-- Full control
+**Benefits:**
+
+- Full MCP protocol support
+- Works with OpenAI Agents SDK
 - Direct RPC connection
 - Privacy
+- Full control
 
-### Option 3: Custom Deployment
+### Remote Cloudflare Deployment (Not MCP Compatible Yet)
 
-Deploy your own instance to Cloudflare Workers - see [DEPLOYMENT.md](./DEPLOYMENT.md)
+The remote deployment at `https://nimiq-mcp.je-cf9.workers.dev` provides simplified HTTP endpoints but does NOT support the MCP protocol yet:
+
+- ✅ `/health` - Health check
+- ✅ `/info` - Server information
+- ✅ `/tools` - List available tools
+- ❌ `/mcp` or `/sse` - Not implemented (requires Node.js-specific transport layer)
+
+For MCP protocol support (OpenAI/ChatGPT integration), use the local `npx` version.
 
 ## Troubleshooting
 

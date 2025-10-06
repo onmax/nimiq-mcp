@@ -262,29 +262,26 @@ Resources are accessed via their URI and don't require parameters:
 
 ## OpenAI Integration
 
-The Nimiq MCP Server is fully compatible with OpenAI's Agents SDK. See [OPENAI_INTEGRATION.md](./OPENAI_INTEGRATION.md) for detailed documentation.
+The Nimiq MCP Server is compatible with OpenAI's Agents SDK when run **locally via npx**. See [OPENAI_INTEGRATION.md](./OPENAI_INTEGRATION.md) for detailed documentation.
+
+> **⚠️ Note**: The remote Cloudflare deployment does NOT support MCP protocol yet. Use local deployment for OpenAI integration.
 
 ### Quick Start with OpenAI
 
 ```python
 from openai import OpenAI
-from mcp import MCPServerStreamableHttp
 
 client = OpenAI(api_key="your-api-key")
 
-# Configure Nimiq MCP Server
-nimiq_mcp = MCPServerStreamableHttp(
-    name="Nimiq Ecosystem",
-    params={
-        "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
-        "timeout": 30
-    }
-)
-
-# Create agent with Nimiq tools
+# Create agent with local Nimiq MCP server
 agent = client.agents.create(
     model="gpt-5",  # or gpt-5-mini, gpt-5-nano
-    tools=[nimiq_mcp],
+    tools=[{
+        "type": "mcp",
+        "server_label": "nimiq",
+        "command": "npx",
+        "args": ["nimiq-mcp"]
+    }],
     instructions="You are a helpful Nimiq ecosystem assistant with access to blockchain data, documentation, and tutorials.",
     reasoning_effort=3  # 1-5 scale
 )
