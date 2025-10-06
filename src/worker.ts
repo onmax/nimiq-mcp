@@ -2,6 +2,7 @@ import type { Server } from 'node:http'
 import { Buffer } from 'node:buffer'
 import { createServer } from 'node:http'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
+// @ts-expect-error - Cloudflare Workers specific module
 import { handleAsNodeRequest } from 'cloudflare:node'
 import { initRpcClient } from 'nimiq-rpc-client-ts/client'
 import { NimiqMcpServer } from './index.js'
