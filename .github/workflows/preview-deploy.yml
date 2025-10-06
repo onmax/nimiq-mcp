@@ -38,7 +38,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --env preview-pr-${{ github.event.pull_request.number }}
+          command: deploy --name nimiq-mcp-pr-${{ github.event.pull_request.number }} --compatibility-date 2023-12-01
           workingDirectory: .
 
       - name: Comment preview URL on PR
@@ -46,7 +46,7 @@ jobs:
         with:
           script: |
             const prNumber = context.issue.number;
-            const previewUrl = `https://preview-pr-${prNumber}.nimiq-mcp.je-cf9.workers.dev`;
+            const previewUrl = `https://nimiq-mcp-pr-${prNumber}.je-cf9.workers.dev`;
 
             const comment = `## 🚀 Preview Deployment Ready!
 
@@ -79,4 +79,4 @@ jobs:
       - name: Test preview health endpoint
         run: |
           sleep 10
-          curl -f https://preview-pr-${{ github.event.pull_request.number }}.nimiq-mcp.je-cf9.workers.dev/health || exit 1
+          curl -f https://nimiq-mcp-pr-${{ github.event.pull_request.number }}.je-cf9.workers.dev/health || exit 1

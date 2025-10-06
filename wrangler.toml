@@ -13,8 +13,3 @@ DEFAULT_RPC_URL = "https://rpc.nimiqwatch.com"
 # NIMIQ_RPC_URL - Custom RPC endpoint URL
 # NIMIQ_RPC_USERNAME - RPC username for authentication
 # NIMIQ_RPC_PASSWORD - RPC password for authentication
-
-# Preview environments configuration
-# Each PR will get its own preview deployment
-[env.preview-pr-*]
-vars = { DEFAULT_RPC_URL = "https://rpc.nimiqwatch.com" }
