@@ -1122,7 +1122,7 @@ export class NimiqMcpServer {
 
   private async readWebClientDocsResource(): Promise<any> {
     try {
-      const docsUrl = 'https://nimiq.com/developers/build/web-client/llms-full.txt'
+      const docsUrl = 'https://nimiq.com/developers/web-client/llms-full.txt'
       const response = await fetch(docsUrl)
 
       if (!response.ok) {
@@ -1151,7 +1151,7 @@ export class NimiqMcpServer {
 
   private async readProtocolDocsResource(): Promise<any> {
     try {
-      const docsUrl = 'https://www.nimiq.com/developers/learn/llms-full.txt'
+      const docsUrl = 'https://www.nimiq.com/developers/protocol/llms-full.txt'
       const response = await fetch(docsUrl)
 
       if (!response.ok) {
@@ -1180,7 +1180,7 @@ export class NimiqMcpServer {
 
   private async readValidatorDocsResource(): Promise<any> {
     try {
-      const docsUrl = 'https://www.nimiq.com/developers/validators/llms-full.txt'
+      const docsUrl = 'https://www.nimiq.com/developers/nodes/llms-full.txt'
       const response = await fetch(docsUrl)
 
       if (!response.ok) {
