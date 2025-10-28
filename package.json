@@ -38,27 +38,27 @@
     "release": "bumpp && pnpm publish"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.18.0",
+    "@modelcontextprotocol/sdk": "^1.20.2",
     "@nimiq/utils": "^0.12.4",
-    "minisearch": "^7.1.2",
+    "minisearch": "^7.2.0",
     "nimiq-rpc-client-ts": "^1.0.0-beta.28",
     "valibot": "^1.1.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.19.0",
-    "@types/node": "^24.3.1",
-    "@typescript-eslint/eslint-plugin": "^8.43.0",
-    "@typescript-eslint/parser": "^8.43.0",
-    "bumpp": "^10.2.0",
-    "eslint": "^9.35.0",
-    "eslint-plugin-format": "^1.0.1",
-    "lint-staged": "^16.1.2",
+    "@types/node": "^24.9.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "bumpp": "^10.3.1",
+    "eslint": "^9.38.0",
+    "eslint-plugin-format": "^1.0.2",
+    "lint-staged": "^16.2.6",
     "simple-git-hooks": "^2.13.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.8.0",
-    "vite": "^7.1.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
     "vitest": "^2.1.5",
-    "wrangler": "^4.35.0"
+    "wrangler": "^4.45.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
