@@ -85,9 +85,18 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.9.3)
     devDependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.20.2
+        version: 1.20.2
+      '@types/node':
+        specifier: ^24.9.2
+        version: 24.9.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.5
+        version: 2.1.9(@types/node@24.9.2)
 
   packages/web-client:
     dependencies:
