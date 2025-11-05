@@ -1,6 +1,6 @@
-import { initRpcClient } from 'nimiq-rpc-client-ts/client'
-import { NimiqMcpServer } from './index.js'
-import { VERSION } from './utils.js'
+import { handleBlockchainRequest } from '@nimiq-mcp/blockchain/worker'
+import { VERSION } from '@nimiq-mcp/core'
+import { handleWebClientRequest } from '@nimiq-mcp/web-client/worker'
 
 export interface Env {
   DEFAULT_RPC_URL: string
@@ -9,27 +9,6 @@ export interface Env {
   NIMIQ_RPC_PASSWORD?: string
 }
 
-// Create a configuration object for the Nimiq server
-function createConfig(env: Env): { rpcUrl: string, rpcUsername?: string, rpcPassword?: string } {
-  return {
-    rpcUrl: env.NIMIQ_RPC_URL || env.DEFAULT_RPC_URL || 'https://rpc.nimiqwatch.com',
-    rpcUsername: env.NIMIQ_RPC_USERNAME,
-    rpcPassword: env.NIMIQ_RPC_PASSWORD,
-  }
-}
-
-// Initialize a global server instance
-let globalMcpServer: NimiqMcpServer | null = null
-
-function getOrCreateServer(config: any): NimiqMcpServer {
-  if (!globalMcpServer) {
-    globalMcpServer = new NimiqMcpServer(config)
-    globalMcpServer.initializeRpc()
-  }
-  return globalMcpServer
-}
-
-// CORS headers for remote MCP access
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -41,204 +20,129 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
 
-    // Handle CORS preflight requests
+    // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        status: 200,
-        headers: corsHeaders,
-      })
+      return new Response(null, { status: 200, headers: corsHeaders })
     }
 
-    // Health check endpoint
+    // Route to web-client MCP server
+    if (url.pathname.startsWith('/web-client')) {
+      return handleWebClientRequest(request)
+    }
+
+    // Route to blockchain MCP server
+    if (url.pathname.startsWith('/blockchain')) {
+      return handleBlockchainRequest(request, env)
+    }
+
+    // Health check for root
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
         status: 'healthy',
         timestamp: new Date().toISOString(),
         service: 'nimiq-mcp',
         version: VERSION,
+        servers: ['web-client', 'blockchain'],
       }), {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       })
     }
 
-    // Server info endpoint
-    if (url.pathname === '/info') {
-      const rpcUrl = env.NIMIQ_RPC_URL || env.DEFAULT_RPC_URL
-      return new Response(JSON.stringify({
-        name: 'nimiq-mcp',
-        version: VERSION,
-        description: 'MCP server for Nimiq blockchain interactions',
-        rpcEndpoint: rpcUrl,
-        hasAuth: !!(env.NIMIQ_RPC_USERNAME && env.NIMIQ_RPC_PASSWORD),
-        capabilities: ['tools', 'resources'],
-        transport: 'http',
-        note: 'This is a simplified HTTP interface. For full MCP support, use the local STDIO version.',
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      })
-    }
-
-    // Tools endpoint - list available tools
-    if (url.pathname === '/tools' && request.method === 'GET') {
-      try {
-        // Create configuration and initialize server
-        const config = createConfig(env)
-        const rpcConfig: any = { url: config.rpcUrl }
-        if (config.rpcUsername && config.rpcPassword) {
-          rpcConfig.auth = {
-            username: config.rpcUsername,
-            password: config.rpcPassword,
-          }
-        }
-        initRpcClient(rpcConfig)
-
-        // Initialize server (not used in this simplified endpoint but needed for RPC setup)
-        getOrCreateServer(config)
-
-        // Return a simplified list of available tools
-        return new Response(JSON.stringify({
-          tools: [
-            { name: 'get_nimiq_supply', description: 'Get current NIM supply information' },
-            { name: 'calculate_nimiq_supply_at', description: 'Calculate NIM supply at specific timestamp' },
-            { name: 'calculate_nimiq_staking_rewards', description: 'Calculate staking rewards' },
-            { name: 'get_nimiq_price', description: 'Get NIM price against other currencies' },
-            { name: 'get_nimiq_head', description: 'Get current head block' },
-            { name: 'get_nimiq_block_by_number', description: 'Get block by number' },
-            { name: 'get_nimiq_block_by_hash', description: 'Get block by hash' },
-            { name: 'get_nimiq_account', description: 'Get account information' },
-            { name: 'get_nimiq_balance', description: 'Get account balance' },
-            { name: 'get_nimiq_transaction', description: 'Get transaction details' },
-            { name: 'get_nimiq_transactions_by_address', description: 'Get transactions for address' },
-            { name: 'get_nimiq_validators', description: 'Get validator information' },
-            { name: 'get_nimiq_validator', description: 'Get specific validator info' },
-            { name: 'get_nimiq_slots', description: 'Get validator slots' },
-            { name: 'get_nimiq_epoch_number', description: 'Get current epoch number' },
-            { name: 'get_nimiq_network_info', description: 'Get network information' },
-            { name: 'get_nimiq_rpc_methods', description: 'Get available RPC methods' },
-            { name: 'search_nimiq_docs', description: 'Search Nimiq documentation' },
-          ],
-          note: 'This is a simplified HTTP interface. For full MCP support with proper JSON-RPC, use the local STDIO version with: npx nimiq-mcp',
-        }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        })
-      }
-      catch (error) {
-        console.error('Tools endpoint error:', error)
-        return new Response(JSON.stringify({
-          error: 'Internal server error',
-          message: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString(),
-        }), {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        })
-      }
-    }
-
-    // Root endpoint with usage information
+    // Root landing page
     if (url.pathname === '/') {
       const html = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Nimiq MCP Server</title>
+    <title>Nimiq MCP Servers</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
-        .header { text-align: center; margin-bottom: 2rem; }
-        .logo { width: 64px; height: 64px; margin: 0 auto 1rem; }
-        .endpoint { background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
-        .code { background: #e5e5e5; padding: 0.5rem; border-radius: 4px; font-family: monospace; }
-        .badge { display: inline-block; background: #007acc; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; margin: 0.25rem; }
+        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 2rem; line-height: 1.6; background: #f9fafb; }
+        .header { text-align: center; margin-bottom: 3rem; }
+        .logo { width: 80px; height: 80px; margin: 0 auto 1rem; }
+        .servers { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .server-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .server-card h3 { margin-top: 0; color: #1f2937; }
+        .server-card p { color: #6b7280; margin: 0.5rem 0; }
+        .server-card a { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #1f70c1; color: white; text-decoration: none; border-radius: 6px; }
+        .server-card a:hover { background: #1e5fa0; }
+        .badge { display: inline-block; background: #1f70c1; color: white; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.875rem; margin: 0.25rem; }
+        .footer { text-align: center; margin-top: 3rem; color: #6b7280; font-size: 0.875rem; }
+        .footer a { color: #1f70c1; text-decoration: none; }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo">
-            <img src="https://raw.githubusercontent.com/onmax/nimiq-mcp/refs/heads/main/.github/logo.svg" alt="Nimiq Logo" width="64" height="64" />
+            <img src="https://raw.githubusercontent.com/onmax/nimiq-mcp/refs/heads/main/.github/logo.svg" alt="Nimiq Logo" width="80" height="80" />
         </div>
-        <h1>Nimiq MCP Server</h1>
-        <p>A Model Context Protocol server for Nimiq blockchain interactions</p>
+        <h1>Nimiq MCP Servers</h1>
+        <p>Model Context Protocol servers for Nimiq blockchain interactions</p>
         <div>
-            <span class="badge">MCP Compatible</span>
-            <span class="badge">Nimiq Blockchain</span>
+            <span class="badge">MCP v1.0.0</span>
+            <span class="badge">Nimiq Albatross</span>
             <span class="badge">Cloudflare Workers</span>
         </div>
     </div>
 
-    <h2>Available Endpoints</h2>
-    
-    <div class="endpoint">
-        <h3>🔗 MCP Connection</h3>
-        <p><strong>POST</strong> <code class="code">/sse</code></p>
-        <p>Main MCP endpoint using Server-Sent Events transport for real-time communication with MCP clients.</p>
+    <div class="servers">
+        <div class="server-card">
+            <h3>🌐 Web Client Server</h3>
+            <p><strong>Documentation & Resources</strong></p>
+            <p>Search Nimiq documentation, access web client guides, protocol specs, and validator information.</p>
+            <ul style="color: #6b7280; font-size: 0.9rem;">
+                <li>1 tool: search_nimiq_docs</li>
+                <li>3 resources: web-client, protocol, validators</li>
+            </ul>
+            <a href="/web-client">View Details →</a>
+        </div>
+
+        <div class="server-card">
+            <h3>⛓️ Blockchain Server</h3>
+            <p><strong>RPC Queries & Calculations</strong></p>
+            <p>Query blockchain data, check balances, get validator info, calculate staking rewards, and fetch NIM prices.</p>
+            <ul style="color: #6b7280; font-size: 0.9rem;">
+                <li>18 tools: accounts, blocks, validators, supply, staking, price</li>
+                <li>Direct RPC integration</li>
+            </ul>
+            <a href="/blockchain">View Details →</a>
+        </div>
     </div>
 
-    <div class="endpoint">
-        <h3>💓 Health Check</h3>
-        <p><strong>GET</strong> <code class="code">/health</code></p>
-        <p>Returns server health status and basic information.</p>
+    <h2 style="text-align: center; margin-top: 3rem;">MCP Client Setup</h2>
+    <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h3>Local STDIO (Recommended)</h3>
+        <p>For full MCP support, use the local STDIO versions:</p>
+        <pre style="background: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto;"><code>npx nimiq-mcp-web-client
+npx nimiq-mcp-blockchain</code></pre>
+
+        <h3 style="margin-top: 2rem;">Remote HTTP (Web Interface)</h3>
+        <p>Access via web endpoints:</p>
+        <ul>
+            <li><strong>Web Client:</strong> <code>${url.origin}/web-client</code></li>
+            <li><strong>Blockchain:</strong> <code>${url.origin}/blockchain</code></li>
+        </ul>
     </div>
 
-    <div class="endpoint">
-        <h3>ℹ️ Server Info</h3>
-        <p><strong>GET</strong> <code class="code">/info</code></p>
-        <p>Returns detailed server information including capabilities and configuration.</p>
+    <div class="footer">
+        <p>
+            Powered by <a href="https://nimiq.com" target="_blank">Nimiq</a> •
+            <a href="https://modelcontextprotocol.io" target="_blank">MCP</a> •
+            <a href="https://workers.cloudflare.com" target="_blank">Cloudflare Workers</a>
+        </p>
+        <p style="margin-top: 0.5rem;">
+            <a href="/health">Health Check</a> •
+            <a href="https://github.com/onmax/nimiq-mcp" target="_blank">GitHub</a>
+        </p>
     </div>
-
-    <h2>MCP Client Configuration</h2>
-    <p>Add this server to your MCP client configuration:</p>
-    <pre class="code">{
-  "mcpServers": {
-    "nimiq-remote": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-everything"],
-      "transport": "sse",
-      "url": "${url.origin}/sse"
-    }
-  }
-}</pre>
-
-    <h2>Available Tools & Resources</h2>
-    <p>This server provides comprehensive tools for Nimiq blockchain interactions:</p>
-    <ul>
-        <li><strong>17 Tools</strong>: Account queries, transaction lookups, validator information, supply calculations, price data, and documentation search</li>
-        <li><strong>3 Resources</strong>: Complete Nimiq documentation for web client, protocol, and validators</li>
-    </ul>
-
-    <p><a href="/info" target="_blank">View detailed capabilities →</a></p>
-
-    <hr>
-    <p style="text-align: center; color: #666; font-size: 0.875rem;">
-        Powered by <a href="https://nimiq.com" target="_blank">Nimiq</a> • 
-        <a href="https://modelcontextprotocol.io" target="_blank">Model Context Protocol</a> • 
-        <a href="https://workers.cloudflare.com" target="_blank">Cloudflare Workers</a>
-    </p>
 </body>
 </html>`
 
       return new Response(html, {
         status: 200,
-        headers: {
-          'Content-Type': 'text/html',
-          ...corsHeaders,
-        },
+        headers: { 'Content-Type': 'text/html', ...corsHeaders },
       })
     }
 
@@ -246,14 +150,11 @@ export default {
     return new Response(JSON.stringify({
       error: 'Not Found',
       message: `Path ${url.pathname} not found`,
-      availableEndpoints: ['/', '/sse', '/health', '/info'],
+      availableEndpoints: ['/', '/health', '/web-client', '/blockchain'],
       timestamp: new Date().toISOString(),
     }), {
       status: 404,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })
   },
 }

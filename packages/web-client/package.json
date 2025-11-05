@@ -3,6 +3,10 @@
   "type": "module",
   "version": "1.0.0",
   "description": "Nimiq documentation and resources MCP server",
+  "exports": {
+    ".": "./dist/index.js",
+    "./worker": "./dist/worker.js"
+  },
   "main": "dist/index.js",
   "bin": {
     "nimiq-mcp-web-client": "dist/index.js"

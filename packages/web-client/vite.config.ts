@@ -3,9 +3,11 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     lib: {
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        worker: 'src/worker.ts',
+      },
       formats: ['es'],
-      fileName: 'index',
     },
     rollupOptions: {
       external: [
@@ -14,6 +16,7 @@ export default defineConfig({
         '@modelcontextprotocol/sdk/server/index.js',
         '@modelcontextprotocol/sdk/server/stdio.js',
         '@modelcontextprotocol/sdk/types.js',
+        '@nimiq-mcp/core',
       ],
     },
     target: 'node20',
