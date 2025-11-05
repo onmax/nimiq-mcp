@@ -1,2 +1,9 @@
 #!/usr/bin/env node
-console.error('Blockchain MCP server')
+import process from 'node:process'
+import { BlockchainMcpServer } from './server.js'
+
+const server = new BlockchainMcpServer()
+server.run().catch((error) => {
+  console.error('Server error:', error)
+  process.exit(1)
+})

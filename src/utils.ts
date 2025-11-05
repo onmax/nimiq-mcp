@@ -5,8 +5,8 @@ import * as v from 'valibot'
 // Declare the global version variable defined by Vite
 declare const __VERSION__: string
 
-// Export version defined at build time
-export const VERSION = __VERSION__
+// Export version defined at build time, fallback for dev mode
+export const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
 
 export interface CliConfig {
   rpcUrl: string
