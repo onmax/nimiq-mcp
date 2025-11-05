@@ -1,5 +1,5 @@
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
-import { RpcMethodsSchema, SlotsSchema, validateInput, ValidatorSchema, ValidatorsSchema } from '@nimiq-mcp/core'
+import { RpcMethodsSchema, SlotsSchema, validateInput, ValidatorSchema, ValidatorsSchema } from 'nimiq-mcp-core'
 import { getActiveValidators, getBlockNumber, getEpochNumber, getPeerCount, getSlotAt, getValidatorByAddress, getValidators, isConsensusEstablished } from 'nimiq-rpc-client-ts/http'
 
 export async function handleGetValidators(args: any, rpcUrl: string): Promise<any> {

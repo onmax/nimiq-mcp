@@ -1,6 +1,6 @@
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
-import { SupplyAtSchema, validateInput } from '@nimiq-mcp/core'
 import { posSupplyAt } from '@nimiq/utils/supply-calculator'
+import { SupplyAtSchema, validateInput } from 'nimiq-mcp-core'
 
 export async function handleGetSupply(_args: any): Promise<any> {
   try {

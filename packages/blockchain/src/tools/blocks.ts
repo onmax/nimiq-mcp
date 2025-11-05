@@ -1,5 +1,5 @@
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
-import { BlockByHashSchema, BlockByNumberSchema, HeadSchema, validateInput } from '@nimiq-mcp/core'
+import { BlockByHashSchema, BlockByNumberSchema, HeadSchema, validateInput } from 'nimiq-mcp-core'
 import { getBlockByHash, getBlockByNumber, getBlockNumber } from 'nimiq-rpc-client-ts/http'
 
 export async function handleGetHead(args: any, rpcUrl: string): Promise<any> {

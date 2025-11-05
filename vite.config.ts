@@ -11,9 +11,9 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       external: [
-        '@nimiq-mcp/core',
-        '@nimiq-mcp/blockchain/worker',
-        '@nimiq-mcp/web-client/worker',
+        'nimiq-mcp-core',
+        'nimiq-mcp-blockchain/worker',
+        'nimiq-mcp-web-client/worker',
       ],
     },
   },

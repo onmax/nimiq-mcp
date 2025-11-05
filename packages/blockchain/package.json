@@ -1,5 +1,5 @@
 {
-  "name": "@nimiq-mcp/blockchain",
+  "name": "nimiq-mcp-blockchain",
   "type": "module",
   "version": "1.0.0",
   "description": "Nimiq blockchain data and RPC MCP server",
@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.2",
-    "@nimiq-mcp/core": "workspace:*",
     "@nimiq/utils": "^0.12.4",
+    "nimiq-mcp-core": "workspace:*",
     "nimiq-rpc-client-ts": "^1.0.0-beta.28"
   },
   "devDependencies": {

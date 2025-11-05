@@ -8,11 +8,11 @@ Model Context Protocol (MCP) servers for the <b>Nimiq blockchain</b> and documen
 <br/>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@nimiq-mcp/blockchain">
-    <img src="https://img.shields.io/npm/v/@nimiq-mcp/blockchain.svg" alt="blockchain version" />
+  <a href="https://www.npmjs.com/package/nimiq-mcp-blockchain">
+    <img src="https://img.shields.io/npm/v/nimiq-mcp-blockchain.svg" alt="blockchain version" />
   </a>
-  <a href="https://www.npmjs.com/package/@nimiq-mcp/web-client">
-    <img src="https://img.shields.io/npm/v/@nimiq-mcp/web-client.svg" alt="web-client version" />
+  <a href="https://www.npmjs.com/package/nimiq-mcp-web-client">
+    <img src="https://img.shields.io/npm/v/nimiq-mcp-web-client.svg" alt="web-client version" />
   </a>
   <a href="https://github.com/onmax/nimiq-mcp/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/onmax/nimiq-mcp.svg" alt="License" />
@@ -35,8 +35,8 @@ Model Context Protocol (MCP) servers for the <b>Nimiq blockchain</b> and documen
 
 **v1.0.0** introduces a modular monorepo architecture with two specialized MCP servers:
 
-- **🌐 Web Client Server** (`@nimiq-mcp/web-client`): Documentation search and resources
-- **⛓️ Blockchain Server** (`@nimiq-mcp/blockchain`): RPC queries, accounts, validators, calculations
+- **🌐 Web Client Server** (`nimiq-mcp-web-client`): Documentation search and resources
+- **⛓️ Blockchain Server** (`nimiq-mcp-blockchain`): RPC queries, accounts, validators, calculations
 
 ## Features
 
@@ -82,11 +82,11 @@ Use dedicated CLIs for each server:
   "mcpServers": {
     "nimiq-web-client": {
       "command": "npx",
-      "args": ["@nimiq-mcp/web-client"]
+      "args": ["nimiq-mcp-web-client"]
     },
     "nimiq-blockchain": {
       "command": "npx",
-      "args": ["@nimiq-mcp/blockchain"]
+      "args": ["nimiq-mcp-blockchain"]
     }
   }
 }
@@ -113,7 +113,7 @@ Use dedicated CLIs for each server:
     "nimiq-blockchain": {
       "command": "npx",
       "args": [
-        "@nimiq-mcp/blockchain",
+        "nimiq-mcp-blockchain",
         "--rpc-url",
         "https://your-rpc-endpoint.com",
         "--rpc-username",
@@ -143,7 +143,7 @@ Use dedicated CLIs for each server:
 
 ## Available Tools and Resources
 
-### 🌐 Web Client Server (`@nimiq-mcp/web-client`)
+### 🌐 Web Client Server (`nimiq-mcp-web-client`)
 
 **1 Tool:**
 
@@ -155,7 +155,7 @@ Use dedicated CLIs for each server:
 - `nimiq://docs/protocol` - Protocol & learning docs
 - `nimiq://docs/validators` - Validator & staking docs
 
-### ⛓️ Blockchain Server (`@nimiq-mcp/blockchain`)
+### ⛓️ Blockchain Server (`nimiq-mcp-blockchain`)
 
 **18 Tools:**
 

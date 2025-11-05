@@ -1,6 +1,6 @@
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
-import { buildElicitationPrompt, StakingRewardsSchema, validateInput } from '@nimiq-mcp/core'
 import { calculateStakingRewards } from '@nimiq/utils/rewards-calculator'
+import { buildElicitationPrompt, StakingRewardsSchema, validateInput } from 'nimiq-mcp-core'
 import { getSupplyData } from './supply.js'
 
 export async function handleCalculateStakingRewards(args: any): Promise<any> {

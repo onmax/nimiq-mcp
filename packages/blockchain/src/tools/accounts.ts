@@ -1,5 +1,5 @@
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
-import { AccountSchema, TransactionsByAddressSchema, TransactionSchema, validateInput } from '@nimiq-mcp/core'
+import { AccountSchema, TransactionsByAddressSchema, TransactionSchema, validateInput } from 'nimiq-mcp-core'
 import { getAccountByAddress, getTransactionByHash, getTransactionsByAddress } from 'nimiq-rpc-client-ts/http'
 
 export async function handleGetAccount(args: any, rpcUrl: string): Promise<any> {

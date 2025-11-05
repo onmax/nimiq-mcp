@@ -56,12 +56,12 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.20.2
         version: 1.20.2
-      '@nimiq-mcp/core':
-        specifier: workspace:*
-        version: link:../core
       '@nimiq/utils':
         specifier: ^0.12.4
         version: 0.12.4
+      nimiq-mcp-core:
+        specifier: workspace:*
+        version: link:../core
       nimiq-rpc-client-ts:
         specifier: ^1.0.0-beta.28
         version: 1.0.0-beta.28(ws@8.18.0)
@@ -103,12 +103,12 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.20.2
         version: 1.20.2
-      '@nimiq-mcp/core':
-        specifier: workspace:*
-        version: link:../core
       minisearch:
         specifier: ^7.2.0
         version: 7.2.0
+      nimiq-mcp-core:
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       '@types/node':
         specifier: ^24.9.2

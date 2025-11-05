@@ -1,5 +1,5 @@
 {
-  "name": "@nimiq-mcp/web-client",
+  "name": "nimiq-mcp-web-client",
   "type": "module",
   "version": "1.0.0",
   "description": "Nimiq documentation and resources MCP server",
@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.2",
-    "@nimiq-mcp/core": "workspace:*",
-    "minisearch": "^7.2.0"
+    "minisearch": "^7.2.0",
+    "nimiq-mcp-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.9.2",

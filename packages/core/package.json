@@ -1,5 +1,5 @@
 {
-  "name": "@nimiq-mcp/core",
+  "name": "nimiq-mcp-core",
   "type": "module",
   "version": "1.0.0",
   "description": "Shared utilities for Nimiq MCP servers",

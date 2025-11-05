@@ -7,8 +7,8 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js'
-import { createSnippet, SearchDocsSchema, validateInput, VERSION } from '@nimiq-mcp/core'
 import MiniSearch from 'minisearch'
+import { createSnippet, SearchDocsSchema, validateInput, VERSION } from 'nimiq-mcp-core'
 import { setupResourceHandlers } from './resources.js'
 import { TOOL_DEFINITIONS } from './tools.js'
 

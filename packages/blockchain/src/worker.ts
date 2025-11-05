@@ -1,4 +1,4 @@
-import { VERSION } from '@nimiq-mcp/core'
+import { VERSION } from 'nimiq-mcp-core'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

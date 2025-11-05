@@ -1,6 +1,6 @@
-import { handleBlockchainRequest } from '@nimiq-mcp/blockchain/worker'
-import { VERSION } from '@nimiq-mcp/core'
-import { handleWebClientRequest } from '@nimiq-mcp/web-client/worker'
+import { handleBlockchainRequest } from 'nimiq-mcp-blockchain/worker'
+import { VERSION } from 'nimiq-mcp-core'
+import { handleWebClientRequest } from 'nimiq-mcp-web-client/worker'
 
 export interface Env {
   DEFAULT_RPC_URL: string

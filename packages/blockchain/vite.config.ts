@@ -15,7 +15,7 @@ export default defineConfig({
         '@modelcontextprotocol/sdk/server/index.js',
         '@modelcontextprotocol/sdk/server/stdio.js',
         '@modelcontextprotocol/sdk/types.js',
-        '@nimiq-mcp/core',
+        'nimiq-mcp-core',
         '@nimiq/utils/fiat-api',
         '@nimiq/utils/supply',
         'nimiq-rpc-client-ts/http',

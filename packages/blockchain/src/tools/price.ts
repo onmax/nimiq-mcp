@@ -1,7 +1,7 @@
 import type { Provider } from '@nimiq/utils/fiat-api'
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
-import { PriceSchema, validateInput } from '@nimiq-mcp/core'
 import { CryptoCurrency, FiatCurrency, getExchangeRates } from '@nimiq/utils/fiat-api'
+import { PriceSchema, validateInput } from 'nimiq-mcp-core'
 
 export async function handleGetNimPrice(args: any): Promise<any> {
   const validatedInput = validateInput(PriceSchema, args)
