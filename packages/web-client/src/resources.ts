@@ -53,21 +53,31 @@ export function setupResourceHandlers(server: Server): void {
 
 async function readWebClientDocsResource(): Promise<any> {
   try {
-    const docsUrl = 'https://nimiq.com/developers/web-client/llms-full.txt'
-    const response = await fetch(docsUrl)
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch web-client documentation: ${response.status} ${response.statusText}`)
+    // Fetch tutorial content from nimiq.guide
+    const tutorialUrl = 'https://nimiq.guide/llms-full.txt'
+    const tutorialResponse = await fetch(tutorialUrl)
+    if (!tutorialResponse.ok) {
+      throw new Error(`Failed to fetch tutorial: ${tutorialResponse.status} ${tutorialResponse.statusText}`)
     }
+    const tutorialContent = await tutorialResponse.text()
 
-    const docsContent = await response.text()
+    // Fetch developer center documentation
+    const devCenterUrl = 'https://nimiq.com/developers/web-client/llms-full.txt'
+    const devCenterResponse = await fetch(devCenterUrl)
+    if (!devCenterResponse.ok) {
+      throw new Error(`Failed to fetch dev center docs: ${devCenterResponse.status} ${devCenterResponse.statusText}`)
+    }
+    const devCenterContent = await devCenterResponse.text()
+
+    // Combine both sources
+    const combinedContent = `${tutorialContent}\n\n${'='.repeat(80)}\n# Developer Center Documentation\n${'='.repeat(80)}\n\n${devCenterContent}`
 
     return {
       contents: [
         {
           uri: 'nimiq://docs/web-client',
           mimeType: 'text/plain',
-          text: docsContent,
+          text: combinedContent,
         },
       ],
     }
