@@ -42,7 +42,7 @@ Model Context Protocol (MCP) servers for the <b>Nimiq blockchain</b> and documen
 
 - 🚀 **Two deployment options**: Remote Worker OR local STDIO
 - 📦 **Modular architecture**: Use one or both servers as needed
-- 🔗 **19 tools total**: 18 blockchain tools + 1 documentation search tool
+- 🔗 **4 tools total**: 3 blockchain tools (with 17 operations) + 1 documentation search tool
 - 🤖 **MCP protocol**: Full compliance with latest specification
 - 💬 **Interactive tools**: Elicitation support for guided UX
 - ⚡ **Remote option**: Cloudflare Worker with routing
@@ -157,36 +157,62 @@ Use dedicated CLIs for each server:
 
 ### ⛓️ Blockchain Server (`nimiq-mcp-blockchain`)
 
-**18 Tools:**
+**3 Consolidated Tools:**
 
-| Category             | Tool                                | Description             |
-| -------------------- | ----------------------------------- | ----------------------- |
-| **Blocks**           | `get_nimiq_head`                    | Current head block      |
-|                      | `get_nimiq_block_by_number`         | Block by number         |
-|                      | `get_nimiq_block_by_hash`           | Block by hash           |
-|                      | `get_nimiq_epoch_number`            | Current epoch           |
-| **Supply & Staking** | `get_nimiq_supply`                  | Current supply stats    |
-|                      | `calculate_nimiq_supply_at`         | Supply at timestamp     |
-|                      | `calculate_nimiq_staking_rewards`   | Staking rewards calc    |
-|                      | `interactive_staking_calculator`    | Interactive calculator  |
-|                      | `get_nimiq_price`                   | NIM price vs currencies |
-| **Accounts**         | `get_nimiq_account`                 | Account info            |
-|                      | `get_nimiq_balance`                 | Account balance         |
-| **Transactions**     | `get_nimiq_transaction`             | Transaction by hash     |
-|                      | `get_nimiq_transactions_by_address` | Txs by address          |
-| **Validators**       | `get_nimiq_validators`              | All validators          |
-|                      | `get_nimiq_validator`               | Specific validator      |
-|                      | `get_nimiq_slots`                   | Validator slots         |
-| **Network**          | `get_nimiq_network_info`            | Network status          |
-| **RPC**              | `get_nimiq_rpc_methods`             | Available RPC methods   |
+#### 1. `query_blockchain`
+
+Query blockchain data by specifying an `operation`:
+
+**Block operations:**
+
+- `get_head` - Get current head block
+- `get_block_by_number` - Get block by number (requires `blockNumber`)
+- `get_block_by_hash` - Get block by hash (requires `hash`)
+- `get_epoch_number` - Get current epoch number
+
+**Account operations:**
+
+- `get_account` - Get account info (requires `address`)
+- `get_balance` - Get account balance (requires `address`)
+
+**Transaction operations:**
+
+- `get_transaction` - Get transaction by hash (requires `hash`)
+- `get_transactions_by_address` - Get transactions by address (requires `address`)
+
+**Validator operations:**
+
+- `get_validators` - Get all validators
+- `get_validator` - Get specific validator (requires `address`)
+- `get_slots` - Get validator slots (optional `blockNumber`)
+
+**Network operations:**
+
+- `get_network_info` - Get network status
+- `get_rpc_methods` - Get available RPC methods
+
+#### 2. `calculate_blockchain`
+
+Perform calculations by specifying an `operation`:
+
+**Supply operations:**
+
+- `get_supply` - Get current NIM supply
+- `calculate_supply_at` - Calculate supply at timestamp (requires `timestampMs`)
+
+**Staking operations:**
+
+- `calculate_staking_rewards` - Calculate staking rewards
+- `interactive_staking_calculator` - Interactive calculator with elicitation
+
+#### 3. `get_nimiq_price`
+
+Get NIM price against other currencies (requires `currencies` array)
 
 ### Tool Parameters
 
-Each tool accepts specific parameters:
+Each tool uses an `operation` parameter to specify the action, plus operation-specific parameters:
 
-- **Block tools**: `includeBody` (boolean) to include transaction details
-- **Address tools**: `address` (string) for Nimiq addresses
-- **Transaction tools**: `hash` (string) for transaction hashes, `max` (number) for limits
 - **Documentation tools**: `includeSchemas` (boolean) for `getRpcMethods` to include detailed parameter/result schemas
 - **Search tools**: `query` (string) for search terms, `limit` (number) to control result count
 

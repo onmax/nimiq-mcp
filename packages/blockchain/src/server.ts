@@ -49,46 +49,68 @@ export class BlockchainMcpServer {
       const { name, arguments: args } = request.params
 
       switch (name) {
-        case 'get_nimiq_supply':
-          return await handleGetSupply(args)
-        case 'calculate_nimiq_supply_at':
-          return handleCalculateSupplyAt(args)
-        case 'calculate_nimiq_staking_rewards':
-          return await handleCalculateStakingRewards(args)
+        case 'query_blockchain':
+          return await this.handleQueryBlockchain(args)
+        case 'calculate_blockchain':
+          return await this.handleCalculateBlockchain(args)
         case 'get_nimiq_price':
           return await handleGetNimPrice(args)
-        case 'get_nimiq_head':
-          return await handleGetHead(args, this.rpcUrl)
-        case 'get_nimiq_block_by_number':
-          return await handleGetBlockByNumber(args, this.rpcUrl)
-        case 'get_nimiq_block_by_hash':
-          return await handleGetBlockByHash(args, this.rpcUrl)
-        case 'get_nimiq_account':
-          return await handleGetAccount(args, this.rpcUrl)
-        case 'get_nimiq_balance':
-          return await handleGetBalance(args, this.rpcUrl)
-        case 'get_nimiq_transaction':
-          return await handleGetTransaction(args, this.rpcUrl)
-        case 'get_nimiq_transactions_by_address':
-          return await handleGetTransactionsByAddress(args, this.rpcUrl)
-        case 'get_nimiq_validators':
-          return await handleGetValidators(args, this.rpcUrl)
-        case 'get_nimiq_validator':
-          return await handleGetValidator(args, this.rpcUrl)
-        case 'get_nimiq_slots':
-          return await handleGetSlots(args, this.rpcUrl)
-        case 'get_nimiq_epoch_number':
-          return await handleGetEpochNumber(args, this.rpcUrl)
-        case 'get_nimiq_network_info':
-          return await handleGetNetworkInfo(args, this.rpcUrl)
-        case 'get_nimiq_rpc_methods':
-          return await handleGetRpcMethods(args)
-        case 'interactive_staking_calculator':
-          return await handleInteractiveStakingCalculator(args)
         default:
           throw new Error(`Unknown tool: ${name}`)
       }
     })
+  }
+
+  private async handleQueryBlockchain(args: any): Promise<any> {
+    const { operation } = args
+
+    switch (operation) {
+      case 'get_head':
+        return await handleGetHead(args, this.rpcUrl)
+      case 'get_block_by_number':
+        return await handleGetBlockByNumber(args, this.rpcUrl)
+      case 'get_block_by_hash':
+        return await handleGetBlockByHash(args, this.rpcUrl)
+      case 'get_account':
+        return await handleGetAccount(args, this.rpcUrl)
+      case 'get_balance':
+        return await handleGetBalance(args, this.rpcUrl)
+      case 'get_transaction':
+        return await handleGetTransaction(args, this.rpcUrl)
+      case 'get_transactions_by_address':
+        return await handleGetTransactionsByAddress(args, this.rpcUrl)
+      case 'get_validators':
+        return await handleGetValidators(args, this.rpcUrl)
+      case 'get_validator':
+        return await handleGetValidator(args, this.rpcUrl)
+      case 'get_slots':
+        return await handleGetSlots(args, this.rpcUrl)
+      case 'get_epoch_number':
+        return await handleGetEpochNumber(args, this.rpcUrl)
+      case 'get_network_info':
+        return await handleGetNetworkInfo(args, this.rpcUrl)
+      case 'get_rpc_methods':
+        return await handleGetRpcMethods(args)
+      default:
+        throw new Error(`Unknown query operation: ${operation}`)
+    }
+  }
+
+  private async handleCalculateBlockchain(args: any): Promise<any> {
+    const { operation } = args
+
+    switch (operation) {
+      case 'get_supply':
+        return await handleGetSupply(args)
+      case 'calculate_supply_at':
+        return handleCalculateSupplyAt(args)
+      case 'calculate_staking_rewards':
+        return await handleCalculateStakingRewards(args)
+      case 'interactive_staking_calculator':
+        return await handleInteractiveStakingCalculator(args)
+      default:
+        throw new Error(`Unknown calculation operation: ${operation}`)
+    }
   }
 
   async run(): Promise<void> {

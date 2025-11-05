@@ -1,23 +1,111 @@
 // Tool definitions for the MCP server
 export const TOOL_DEFINITIONS = [
   {
-    name: 'get_nimiq_supply',
-    description: 'Get the current supply of NIM. Returns an object with the following supply fields: total, vested, burned, max, initial, staking, minted, circulating, and mined. All values are in Luna (1 NIM = 100,000 Luna).',
+    name: 'query_blockchain',
+    description: 'Query Nimiq blockchain data including blocks, accounts, transactions, validators, and network information. Use the operation parameter to specify what to query.',
     inputSchema: {
       type: 'object',
-      properties: {},
+      properties: {
+        operation: {
+          type: 'string',
+          enum: [
+            'get_head',
+            'get_block_by_number',
+            'get_block_by_hash',
+            'get_account',
+            'get_balance',
+            'get_transaction',
+            'get_transactions_by_address',
+            'get_validators',
+            'get_validator',
+            'get_slots',
+            'get_epoch_number',
+            'get_network_info',
+            'get_rpc_methods',
+          ],
+          description: 'The blockchain query operation to perform',
+        },
+        // Block operations
+        blockNumber: {
+          type: 'number',
+          description: 'Block number (for get_block_by_number, get_slots)',
+        },
+        hash: {
+          type: 'string',
+          description: 'Block or transaction hash (for get_block_by_hash, get_transaction)',
+        },
+        includeBody: {
+          type: 'boolean',
+          description: 'Include block body with transactions (for block operations)',
+          default: false,
+        },
+        // Account operations
+        address: {
+          type: 'string',
+          description: 'Nimiq address (for get_account, get_balance, get_transactions_by_address, get_validator)',
+        },
+        withMetadata: {
+          type: 'boolean',
+          description: 'Include additional metadata (for account operations)',
+          default: false,
+        },
+        // Transaction operations
+        max: {
+          type: 'number',
+          description: 'Maximum number of transactions to return (for get_transactions_by_address)',
+          default: 100,
+        },
+        startAt: {
+          type: 'string',
+          description: 'Transaction hash to start at for paging (for get_transactions_by_address)',
+        },
+        onlyConfirmed: {
+          type: 'boolean',
+          description: 'Only return confirmed transactions (for get_transactions_by_address)',
+          default: true,
+        },
+        // Validator operations
+        includeStakers: {
+          type: 'boolean',
+          description: 'Include staker information for validators (for get_validators)',
+          default: false,
+        },
+        onlyActive: {
+          type: 'boolean',
+          description: 'Only return active validators (for get_validators)',
+          default: true,
+        },
+        // RPC methods
+        includeSchemas: {
+          type: 'boolean',
+          description: 'Include parameter and result schemas (for get_rpc_methods)',
+          default: false,
+        },
+      },
+      required: ['operation'],
       additionalProperties: false,
     },
   },
   {
-    name: 'calculate_nimiq_supply_at',
-    description: 'Calculate the Nimiq PoS supply at a given time. Returns the calculated supply for the specified timestamp and network.',
+    name: 'calculate_blockchain',
+    description: 'Perform calculations related to Nimiq supply and staking rewards. Use the operation parameter to specify what to calculate.',
     inputSchema: {
       type: 'object',
       properties: {
+        operation: {
+          type: 'string',
+          enum: [
+            'get_supply',
+            'calculate_supply_at',
+            'calculate_staking_rewards',
+            'interactive_staking_calculator',
+          ],
+          description: 'The calculation operation to perform',
+        },
+        // Supply at timestamp
         timestampMs: {
           type: 'number',
-          description: 'The timestamp in milliseconds at which to calculate the PoS supply',
+          description: 'Timestamp in milliseconds (for calculate_supply_at)',
         },
         network: {
           type: 'string',
@@ -25,54 +113,39 @@ export const TOOL_DEFINITIONS = [
           description: 'The network name',
           default: 'main-albatross',
         },
-      },
-      required: ['timestampMs'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'calculate_nimiq_staking_rewards',
-    description: 'Calculates the potential wealth accumulation based on staking. If `stakedSupplyRatio` is not provided, the current staked ratio will be used instead.',
-    inputSchema: {
-      type: 'object',
-      properties: {
+        // Staking rewards
         stakedSupplyRatio: {
           type: 'number',
-          description: 'The ratio of the total staked cryptocurrency to the total supply. If not provided, the current staked ratio will be used instead.',
+          description: 'Ratio of total staked to total supply (for calculate_staking_rewards)',
         },
         amount: {
           type: 'number',
-          description: 'The initial amount of cryptocurrency staked, in NIM',
+          description: 'Initial amount to stake in NIM (for staking calculations)',
           default: 1,
         },
         days: {
           type: 'number',
-          description: 'The number of days the cryptocurrency is staked',
+          description: 'Number of days to stake (for staking calculations)',
           default: 365,
         },
         autoRestake: {
           type: 'boolean',
-          description: 'Indicates whether the staking rewards are restaked',
+          description: 'Whether to automatically restake rewards (for staking calculations)',
           default: true,
-        },
-        network: {
-          type: 'string',
-          enum: ['main-albatross', 'test-albatross'],
-          description: 'The network name',
-          default: 'main-albatross',
         },
         fee: {
           type: 'number',
-          description: 'The fee percentage that the pool charges for staking',
+          description: 'Pool fee percentage (for calculate_staking_rewards)',
           default: 0,
         },
       },
+      required: ['operation'],
       additionalProperties: false,
     },
   },
   {
     name: 'get_nimiq_price',
-    description: 'Get the price of NIM against other currencies',
+    description: 'Get the current price of NIM against other currencies (fiat and crypto)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -81,265 +154,16 @@ export const TOOL_DEFINITIONS = [
           items: {
             type: 'string',
           },
-          description: 'An array of currency tickers to get the price against (e.g., ["USD", "EUR", "BTC"])',
+          description: 'Array of currency tickers to get price against (e.g., ["USD", "EUR", "BTC"])',
         },
         provider: {
           type: 'string',
           enum: ['CryptoCompare', 'CoinGecko'],
-          description: 'The provider to use for fetching prices',
+          description: 'Price data provider',
           default: 'CryptoCompare',
         },
       },
       required: ['currencies'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_head',
-    description: 'Get the current head block of the Nimiq blockchain',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        includeBody: {
-          type: 'boolean',
-          description: 'Whether to include the block body with transactions',
-          default: false,
-        },
-      },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_block_by_number',
-    description: 'Get a Nimiq block by its number',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        blockNumber: {
-          type: 'number',
-          description: 'The block number to retrieve',
-        },
-        includeBody: {
-          type: 'boolean',
-          description: 'Whether to include the block body with transactions',
-          default: false,
-        },
-      },
-      required: ['blockNumber'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_block_by_hash',
-    description: 'Get a Nimiq block by its hash',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        hash: {
-          type: 'string',
-          description: 'The block hash to retrieve',
-        },
-        includeBody: {
-          type: 'boolean',
-          description: 'Whether to include the block body with transactions',
-          default: false,
-        },
-      },
-      required: ['hash'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_account',
-    description: 'Get Nimiq account information by address',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        address: {
-          type: 'string',
-          description: 'The Nimiq address to get account information for',
-        },
-        withMetadata: {
-          type: 'boolean',
-          description: 'Whether to include additional metadata',
-          default: false,
-        },
-      },
-      required: ['address'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_balance',
-    description: 'Get the balance of a Nimiq account',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        address: {
-          type: 'string',
-          description: 'The Nimiq address to get balance for',
-        },
-        withMetadata: {
-          type: 'boolean',
-          description: 'Whether to include additional metadata',
-          default: false,
-        },
-      },
-      required: ['address'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_transaction',
-    description: 'Get Nimiq transaction details by hash',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        hash: {
-          type: 'string',
-          description: 'The transaction hash to retrieve',
-        },
-      },
-      required: ['hash'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_transactions_by_address',
-    description: 'Get Nimiq transactions for a specific address',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        address: {
-          type: 'string',
-          description: 'The Nimiq address to get transactions for',
-        },
-        max: {
-          type: 'number',
-          description: 'Maximum number of transactions to return',
-          default: 100,
-        },
-        startAt: {
-          type: 'string',
-          description: 'Transaction hash to start at, used for paging',
-        },
-        onlyConfirmed: {
-          type: 'boolean',
-          description: 'Whether to only return confirmed transactions',
-          default: true,
-        },
-      },
-      required: ['address'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_validators',
-    description: 'Get information about Nimiq validators. By default, it returns only active validators.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        includeStakers: {
-          type: 'boolean',
-          description: 'Whether to include staker information for each validator',
-          default: false,
-        },
-        onlyActive: {
-          type: 'boolean',
-          description: 'If true, returns only active validators. If false, returns all validators.',
-          default: true,
-        },
-      },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_validator',
-    description: 'Get Nimiq validator information by address',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        address: {
-          type: 'string',
-          description: 'The validator address to get information for',
-        },
-      },
-      required: ['address'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_slots',
-    description: 'Get Nimiq validator slots information',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        blockNumber: {
-          type: 'number',
-          description: 'Block number to get slots for (optional, defaults to current)',
-        },
-      },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_epoch_number',
-    description: 'Get the current Nimiq epoch number',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_network_info',
-    description: 'Get Nimiq network information including peer count and sync status',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'get_nimiq_rpc_methods',
-    description: 'Get all available Nimiq RPC methods from the latest OpenRPC document',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        includeSchemas: {
-          type: 'boolean',
-          description: 'Whether to include parameter and result schemas for each method',
-          default: false,
-        },
-      },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'interactive_staking_calculator',
-    description: 'Interactive staking rewards calculator that guides users through the calculation process by asking for missing parameters when needed. Supports elicitation for better user experience.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        amount: {
-          type: 'number',
-          description: 'Initial amount to stake in NIM (optional - will be requested if not provided)',
-        },
-        days: {
-          type: 'number',
-          description: 'Number of days to stake (optional - will be requested if not provided)',
-        },
-        autoRestake: {
-          type: 'boolean',
-          description: 'Whether to automatically restake rewards (optional - will be requested if not provided)',
-        },
-        network: {
-          type: 'string',
-          enum: ['main-albatross', 'test-albatross'],
-          description: 'Network to calculate for',
-          default: 'main-albatross',
-        },
-      },
       additionalProperties: false,
     },
   },
