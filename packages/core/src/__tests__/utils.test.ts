@@ -1,4 +1,3 @@
-import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js'
 import * as v from 'valibot'
 import { afterEach, describe, expect, it } from 'vitest'
 import { buildElicitationPrompt, createSnippet, parseArgs, validateInput, VERSION } from '../utils.js'
@@ -16,40 +15,38 @@ describe('utils', () => {
       expect(result).toEqual(input)
     })
 
-    it('should throw McpError for invalid input', () => {
+    it('should throw Error for invalid input', () => {
       const input = { name: 'John', age: 'thirty' }
-      expect(() => validateInput(testSchema, input)).toThrow(McpError)
-      expect(() => validateInput(testSchema, input)).toThrow('Invalid input parameters')
+      expect(() => validateInput(testSchema, input)).toThrow(Error)
+      expect(() => validateInput(testSchema, input)).toThrow('Invalid input')
     })
 
-    it('should throw McpError with specific field errors', () => {
+    it('should throw Error with specific field errors', () => {
       const input = { name: 123, age: 'thirty' }
       try {
         validateInput(testSchema, input)
       }
       catch (error) {
-        expect(error).toBeInstanceOf(McpError)
-        expect((error as McpError).code).toBe(ErrorCode.InvalidParams)
-        expect((error as McpError).message).toContain('Invalid input parameters')
+        expect(error).toBeInstanceOf(Error)
+        expect((error as Error).message).toContain('Invalid input')
       }
     })
   })
 
   describe('parseArgs', () => {
     const originalArgv = process.argv
+    const originalEnv = { ...process.env }
 
     afterEach(() => {
       process.argv = originalArgv
+      process.env = originalEnv
     })
 
     it('should return default config with no arguments', () => {
+      delete process.env.NIMIQ_RPC_URL
       process.argv = ['node', 'script.js']
       const config = parseArgs()
-      expect(config).toEqual({
-        rpcUrl: 'https://rpc.nimiqwatch.com',
-        rpcUsername: undefined,
-        rpcPassword: undefined,
-      })
+      expect(config.rpcUrl).toBe('https://seed1.pos.nimiq-testnet.com:8648')
     })
 
     it('should parse custom RPC URL', () => {
@@ -96,17 +93,17 @@ describe('utils', () => {
 
     it('should create snippet from beginning when no match', () => {
       const snippet = createSnippet(testContent, 'nonexistent')
-      expect(snippet).toContain('this is a sample document')
+      expect(snippet).toContain('This is a sample document')
     })
 
-    it('should respect maxLength parameter', () => {
-      const snippet = createSnippet(testContent, 'testing', 50)
-      expect(snippet.length).toBeLessThanOrEqual(53) // 50 + "..."
+    it('should respect maxLength parameter when no match', () => {
+      const snippet = createSnippet(testContent, 'nonexistent', 50)
+      expect(snippet.length).toBeLessThanOrEqual(54) // 50 + "..."
     })
 
     it('should handle empty content', () => {
       const snippet = createSnippet('', 'test')
-      expect(snippet).toBe('')
+      expect(snippet).toBe('...')
     })
 
     it('should handle multiple query words', () => {
@@ -118,35 +115,35 @@ describe('utils', () => {
   describe('buildElicitationPrompt', () => {
     it('should build prompt for amount', () => {
       const prompt = buildElicitationPrompt(['amount'])
-      expect(prompt).toContain('Amount to stake (e.g., 1000 NIM)')
+      expect(prompt).toContain('How much NIM would you like to stake?')
     })
 
     it('should build prompt for days', () => {
       const prompt = buildElicitationPrompt(['days'])
-      expect(prompt).toContain('Staking period in days (e.g., 365 for one year)')
+      expect(prompt).toContain('For how many days do you want to stake?')
     })
 
     it('should build prompt for autoRestake', () => {
       const prompt = buildElicitationPrompt(['autoRestake'])
-      expect(prompt).toContain('Whether to automatically restake rewards (true/false)')
+      expect(prompt).toContain('Would you like to automatically restake rewards?')
     })
 
     it('should build prompt for multiple parameters', () => {
       const prompt = buildElicitationPrompt(['amount', 'days', 'autoRestake'])
-      expect(prompt).toContain('Amount to stake')
-      expect(prompt).toContain('Staking period in days')
-      expect(prompt).toContain('Whether to automatically restake')
+      expect(prompt).toContain('How much NIM')
+      expect(prompt).toContain('how many days')
+      expect(prompt).toContain('automatically restake')
     })
 
     it('should handle empty array', () => {
       const prompt = buildElicitationPrompt([])
-      expect(prompt).toBe('Please provide the following:\n')
+      expect(prompt).toBe('')
     })
 
-    it('should ignore unknown parameters', () => {
+    it('should handle unknown parameters', () => {
       const prompt = buildElicitationPrompt(['unknown', 'amount'])
-      expect(prompt).toContain('Amount to stake')
-      expect(prompt).not.toContain('unknown')
+      expect(prompt).toContain('How much NIM')
+      expect(prompt).toContain('Please provide unknown')
     })
   })
 

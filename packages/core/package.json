@@ -1,0 +1,27 @@
+{
+  "name": "nimiq-mcp-core",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Shared utilities for Nimiq MCP servers",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "valibot": "^1.1.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "@types/node": "^24.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.5"
+  }
+}

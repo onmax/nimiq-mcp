@@ -1,18 +1,18 @@
 <h1 align="center">
-  <img alt="Nimiq MCP Server logo" loading="lazy" width="96" height="96" decoding="async" data-nimg="1" style="color:transparent" src="https://raw.githubusercontent.com/onmax/nimiq-mcp/refs/heads/main/.github/logo.svg" />
+  <img alt="Nimiq MCP Servers logo" loading="lazy" width="96" height="96" decoding="async" data-nimg="1" style="color:transparent" src="https://raw.githubusercontent.com/onmax/nimiq-mcp/refs/heads/main/.github/logo.svg" />
   </br>
-  Nimiq MCP Server</h1>
+  Nimiq MCP Servers</h1>
 <p align="center">
-A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockchain</b>.
+Model Context Protocol (MCP) servers for the <b>Nimiq blockchain</b> and documentation.
 </p>
 <br/>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/nimiq-mcp">
-    <img src="https://img.shields.io/npm/v/nimiq-mcp.svg" alt="npm version" />
+  <a href="https://www.npmjs.com/package/nimiq-mcp-blockchain">
+    <img src="https://img.shields.io/npm/v/nimiq-mcp-blockchain.svg" alt="blockchain version" />
   </a>
-  <a href="https://www.npmjs.com/package/nimiq-mcp">
-    <img src="https://img.shields.io/npm/dm/nimiq-mcp.svg" alt="npm downloads" />
+  <a href="https://www.npmjs.com/package/nimiq-mcp-web-client">
+    <img src="https://img.shields.io/npm/v/nimiq-mcp-web-client.svg" alt="web-client version" />
   </a>
   <a href="https://github.com/onmax/nimiq-mcp/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/onmax/nimiq-mcp.svg" alt="License" />
@@ -31,48 +31,62 @@ A Model Context Protocol (MCP) server for interacting with the <b>Nimiq blockcha
   </p>
 </p>
 
+## Overview
+
+**v1.0.0** introduces a modular monorepo architecture with two specialized MCP servers:
+
+- **🌐 Web Client Server** (`nimiq-mcp-web-client`): Documentation search and resources
+- **⛓️ Blockchain Server** (`nimiq-mcp-blockchain`): RPC queries, accounts, validators, calculations
+
 ## Features
 
-- 🚀 **Two deployment options**: Zero-setup remote access OR local installation
-- 🔗 **18 comprehensive tools** for accounts, transactions, blocks, validators, and more
-- 🤖 **MCP 2025-06-18 Protocol**: Latest specification with enhanced features
-- 💬 **Interactive Tools**: Elicitation support for guided user experiences
-- ⚡ **Remote option**: No installation required - just add the URL to your MCP client
-- 🔧 **Local option**: Full control with `npx nimiq-mcp`
-- 🔍 **Advanced search**: Full-text search through comprehensive Nimiq documentation
-- 📊 **Enhanced calculations**: Interactive staking rewards calculator with smart defaults
-- 🔒 **Read-only operations** (sending transactions not supported for security)
-- ✅ **Input validation**: Comprehensive schema validation for all tool inputs
+- 🚀 **Two deployment options**: Remote Worker OR local STDIO
+- 📦 **Modular architecture**: Use one or both servers as needed
+- 🔗 **4 tools total**: 3 blockchain tools (with 17 operations) + 1 documentation search tool
+- 🤖 **MCP protocol**: Full compliance with latest specification
+- 💬 **Interactive tools**: Elicitation support for guided UX
+- ⚡ **Remote option**: Cloudflare Worker with routing
+- 🔧 **Local option**: Dedicated CLI for each server
+- 🔍 **Documentation search**: Full-text search through Nimiq docs
+- 📊 **Calculations**: Supply, staking rewards, price data
+- 🔒 **Read-only**: No transaction sending for security
+- ✅ **Input validation**: Comprehensive Valibot schema validation
 
 ## Quick Start
 
-Choose one of two options:
+### Option 1: Remote Access (Cloudflare Worker)
 
-### Option 1: Remote Access
-
-Add this to your MCP client configuration:
+Access both servers via web endpoints:
 
 ```json
 {
   "mcpServers": {
-    "nimiq": {
-      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse",
-      "transport": "sse"
+    "nimiq-web-client": {
+      "url": "https://nimiq-mcp.je-cf9.workers.dev/web-client",
+      "transport": "http"
+    },
+    "nimiq-blockchain": {
+      "url": "https://nimiq-mcp.je-cf9.workers.dev/blockchain",
+      "transport": "http"
     }
   }
 }
 ```
 
-### Option 2: Local Installation
+### Option 2: Local Installation (STDIO)
 
-Add this to your MCP client configuration:
+Use dedicated CLIs for each server:
 
 ```json
 {
   "mcpServers": {
-    "nimiq": {
+    "nimiq-web-client": {
       "command": "npx",
-      "args": ["nimiq-mcp"]
+      "args": ["nimiq-mcp-web-client"]
+    },
+    "nimiq-blockchain": {
+      "command": "npx",
+      "args": ["nimiq-mcp-blockchain"]
     }
   }
 }
@@ -80,42 +94,26 @@ Add this to your MCP client configuration:
 
 ## Comparison
 
-| Feature              | Remote Access                   | Local Installation           |
-| -------------------- | ------------------------------- | ---------------------------- |
-| **Setup**            | Zero installation required      | Requires Node.js/npm         |
-| **Updates**          | Automatic                       | Manual (npx pulls latest)    |
-| **Privacy**          | Requests go through our servers | Direct connection to RPC     |
-| **Availability**     | Depends on our service uptime   | Depends on local environment |
-| **Protocol Support** | SSE transport only              | Full MCP protocol support    |
+| Feature          | Remote (Worker)   | Local (STDIO)    |
+| ---------------- | ----------------- | ---------------- |
+| **Setup**        | Zero installation | Requires Node.js |
+| **Updates**      | Automatic         | Manual (npx)     |
+| **Privacy**      | Via Worker        | Direct RPC       |
+| **Availability** | Worker uptime     | Local env        |
+| **Protocol**     | HTTP transport    | Full MCP support |
 
-### With Custom RPC Endpoint & Auth
+### With Custom RPC (Blockchain Server Only)
 
 <details>
-<summary>Remote (SSE)</summary>
+<summary>Local CLI</summary>
 
 ```json
 {
   "mcpServers": {
-    "nimiq": {
-      "url": "https://nimiq-mcp.je-cf9.workers.dev/sse?rpc-url=https://your-rpc-endpoint.com&rpc-username=your-username&rpc-password=your-password",
-      "transport": "sse"
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary>Local (npx)</summary>
-
-```json
-{
-  "mcpServers": {
-    "nimiq": {
+    "nimiq-blockchain": {
       "command": "npx",
       "args": [
-        "nimiq-mcp",
+        "nimiq-mcp-blockchain",
         "--rpc-url",
         "https://your-rpc-endpoint.com",
         "--rpc-username",
@@ -132,56 +130,89 @@ Add this to your MCP client configuration:
 
 ## Available Arguments
 
-| CLI Arguments               | URL Arguments             | Description                     | Default                      |
-| --------------------------- | ------------------------- | ------------------------------- | ---------------------------- |
-| `--rpc-url <url>`           | `rpc-url=<url>`           | Nimiq RPC endpoint URL          | `https://rpc.nimiqwatch.com` |
-| `--rpc-username <username>` | `rpc-username=<username>` | RPC username for authentication | None                         |
-| `--rpc-password <password>` | `rpc-password=<password>` | RPC password for authentication | None                         |
-| `--help, -h`                | N/A                       | Show help message               | N/A                          |
+**Blockchain Server Only:**
+
+| Argument                | Description        | Default                      |
+| ----------------------- | ------------------ | ---------------------------- |
+| `--rpc-url <url>`       | Nimiq RPC endpoint | `https://rpc.nimiqwatch.com` |
+| `--rpc-username <user>` | RPC auth username  | None                         |
+| `--rpc-password <pass>` | RPC auth password  | None                         |
+| `--help, -h`            | Show help          | N/A                          |
+
+**Web Client Server:** No arguments needed
 
 ## Available Tools and Resources
 
-The MCP server provides comprehensive tools and resources for interacting with the Nimiq blockchain:
+### 🌐 Web Client Server (`nimiq-mcp-web-client`)
 
-### Tools (18 available)
+**1 Tool:**
 
-| Category                         | Tool                           | Description                                                    |
-| -------------------------------- | ------------------------------ | -------------------------------------------------------------- |
-| **Blockchain Data Tools**        | `getHead`                      | Get the current head block of the Nimiq blockchain             |
-|                                  | `getBlockByNumber`             | Retrieve a specific block by its number                        |
-|                                  | `getBlockByHash`               | Retrieve a specific block by its hash                          |
-|                                  | `getEpochNumber`               | Get the current epoch number                                   |
-| **Blockchain Calculation Tools** | `getSupply`                    | Get the current circulating supply of NIM                      |
-|                                  | `calculateSupplyAt`            | Calculate the Nimiq PoS supply at a given time                 |
-|                                  | `calculateStakingRewards`      | Calculates the potential wealth accumulation based on staking  |
-|                                  | `interactiveStakingCalculator` | **NEW**: Interactive calculator with elicitation support       |
-|                                  | `getPrice`                     | Get the price of NIM against other currencies                  |
-| **Account & Balance Tools**      | `getAccount`                   | Get detailed account information by address                    |
-|                                  | `getBalance`                   | Get the balance of a specific account address                  |
-| **Transaction Tools**            | `getTransaction`               | Get detailed transaction information by hash                   |
-|                                  | `getTransactionsByAddress`     | Get transaction history for a specific address                 |
-| **Validator Tools**              | `getValidators`                | Get information about all active validators                    |
-|                                  | `getValidator`                 | Get detailed information about a specific validator            |
-|                                  | `getSlots`                     | Get validator slot information for current or specific block   |
-| **Network Tools**                | `getNetworkInfo`               | Get network status including peer count and consensus state    |
-| **Documentation Tools**          | `getRpcMethods`                | Get all available RPC methods from the latest OpenRPC document |
-|                                  | `searchDocs`                   | Search through the Nimiq documentation using full-text search  |
+- `search_nimiq_docs` - Full-text search through Nimiq documentation
 
-### Resources (3 available)
+**3 Resources:**
 
-| Category                    | Resource                  | Description                                                 |
-| --------------------------- | ------------------------- | ----------------------------------------------------------- |
-| **Documentation Resources** | `nimiq://docs/web-client` | Complete web-client documentation for LLMs                  |
-|                             | `nimiq://docs/protocol`   | Complete Nimiq protocol and learning documentation for LLMs |
-|                             | `nimiq://docs/validators` | Complete validator and staking documentation for LLMs       |
+- `nimiq://docs/web-client` - Web client documentation
+- `nimiq://docs/protocol` - Protocol & learning docs
+- `nimiq://docs/validators` - Validator & staking docs
+
+### ⛓️ Blockchain Server (`nimiq-mcp-blockchain`)
+
+**3 Consolidated Tools:**
+
+#### 1. `query_blockchain`
+
+Query blockchain data by specifying an `operation`:
+
+**Block operations:**
+
+- `get_head` - Get current head block
+- `get_block_by_number` - Get block by number (requires `blockNumber`)
+- `get_block_by_hash` - Get block by hash (requires `hash`)
+- `get_epoch_number` - Get current epoch number
+
+**Account operations:**
+
+- `get_account` - Get account info (requires `address`)
+- `get_balance` - Get account balance (requires `address`)
+
+**Transaction operations:**
+
+- `get_transaction` - Get transaction by hash (requires `hash`)
+- `get_transactions_by_address` - Get transactions by address (requires `address`)
+
+**Validator operations:**
+
+- `get_validators` - Get all validators
+- `get_validator` - Get specific validator (requires `address`)
+- `get_slots` - Get validator slots (optional `blockNumber`)
+
+**Network operations:**
+
+- `get_network_info` - Get network status
+- `get_rpc_methods` - Get available RPC methods
+
+#### 2. `calculate_blockchain`
+
+Perform calculations by specifying an `operation`:
+
+**Supply operations:**
+
+- `get_supply` - Get current NIM supply
+- `calculate_supply_at` - Calculate supply at timestamp (requires `timestampMs`)
+
+**Staking operations:**
+
+- `calculate_staking_rewards` - Calculate staking rewards
+- `interactive_staking_calculator` - Interactive calculator with elicitation
+
+#### 3. `get_nimiq_price`
+
+Get NIM price against other currencies (requires `currencies` array)
 
 ### Tool Parameters
 
-Each tool accepts specific parameters:
+Each tool uses an `operation` parameter to specify the action, plus operation-specific parameters:
 
-- **Block tools**: `includeBody` (boolean) to include transaction details
-- **Address tools**: `address` (string) for Nimiq addresses
-- **Transaction tools**: `hash` (string) for transaction hashes, `max` (number) for limits
 - **Documentation tools**: `includeSchemas` (boolean) for `getRpcMethods` to include detailed parameter/result schemas
 - **Search tools**: `query` (string) for search terms, `limit` (number) to control result count
 

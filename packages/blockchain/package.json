@@ -1,0 +1,32 @@
+{
+  "name": "nimiq-mcp-blockchain",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Nimiq blockchain data and RPC MCP server",
+  "exports": {
+    ".": "./dist/index.js",
+    "./worker": "./dist/worker.js"
+  },
+  "main": "dist/index.js",
+  "bin": {
+    "nimiq-mcp-blockchain": "dist/index.js"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "@nimiq/utils": "^0.12.4",
+    "nimiq-mcp-core": "workspace:*",
+    "nimiq-rpc-client-ts": "^1.0.0-beta.28"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
+  }
+}

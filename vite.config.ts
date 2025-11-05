@@ -1,32 +1,20 @@
-import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 
-// Read version from package.json at build time
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
-
 export default defineConfig({
-  define: {
-    __VERSION__: JSON.stringify(packageJson.version),
-  },
   build: {
     lib: {
-      entry: ['src/index.ts', 'src/worker.ts'],
+      entry: 'src/worker.ts',
       formats: ['es'],
+      fileName: () => 'src/worker.js',
     },
-    target: 'node20',
+    target: 'esnext',
     outDir: 'dist',
     rollupOptions: {
       external: [
-        '@modelcontextprotocol/sdk',
-        '@nimiq/utils',
-        'minisearch',
-        'nimiq-rpc-client-ts',
-        'valibot',
+        'nimiq-mcp-core',
+        'nimiq-mcp-blockchain/worker',
+        'nimiq-mcp-web-client/worker',
       ],
-      output: {
-        preserveModules: true,
-        entryFileNames: '[name].js',
-      },
     },
   },
   test: {
