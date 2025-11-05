@@ -1,48 +1,21 @@
 {
   "name": "nimiq-mcp",
   "type": "module",
-  "version": "0.0.10",
+  "version": "1.0.0",
+  "private": true,
   "description": "MCP server for Nimiq blockchain interactions",
-  "author": "",
-  "license": "MIT",
-  "keywords": [
-    "mcp",
-    "nimiq",
-    "blockchain",
-    "rpc"
-  ],
-  "main": "dist/index.js",
-  "bin": {
-    "nimiq-mcp": "dist/index.js"
-  },
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
-    "build": "vite build",
+    "build": "pnpm -r build",
+    "dev:web-client": "pnpm --filter @nimiq-mcp/web-client dev",
+    "dev:blockchain": "pnpm --filter @nimiq-mcp/blockchain dev",
     "build:worker": "vite build && wrangler deploy --dry-run",
-    "dev": "tsx src/index.ts",
     "dev:worker": "wrangler dev",
-    "start": "node dist/index.js",
     "deploy": "wrangler deploy",
-    "deploy:secrets": "npm run deploy:secrets:help",
-    "deploy:secrets:help": "echo 'Set secrets with: wrangler secret put NIMIQ_RPC_URL && wrangler secret put NIMIQ_RPC_USERNAME && wrangler secret put NIMIQ_RPC_PASSWORD'",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit",
-    "inspect": "npx @modelcontextprotocol/inspector tsx src/index.ts",
-    "prepublishOnly": "pnpm build",
-    "release": "bumpp && pnpm publish"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.20.2",
-    "@nimiq/utils": "^0.12.4",
-    "minisearch": "^7.2.0",
-    "nimiq-rpc-client-ts": "^1.0.0-beta.28",
-    "valibot": "^1.1.0"
+    "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.19.0",
