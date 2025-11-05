@@ -1,2 +1,10 @@
 #!/usr/bin/env node
-console.error('Web client MCP server')
+
+import process from 'node:process'
+import { WebClientMcpServer } from './server.js'
+
+const server = new WebClientMcpServer()
+server.run().catch((error) => {
+  console.error('Failed to start server:', error)
+  process.exit(1)
+})
