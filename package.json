@@ -5,6 +5,14 @@
   "description": "MCP server for Nimiq blockchain interactions",
   "author": "",
   "license": "MIT",
+  "homepage": "https://github.com/onmax/nimiq-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onmax/nimiq-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/onmax/nimiq-mcp/issues"
+  },
   "keywords": [
     "mcp",
     "nimiq",
